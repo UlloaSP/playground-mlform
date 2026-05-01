@@ -1,0 +1,247 @@
+.fd-shell {
+  min-height: 100dvh;
+  padding: 1.2rem;
+}
+
+.fd-page {
+  width: min(1220px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.fd-card,
+.fd-form-shell {
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(123, 120, 180, 0.34);
+  border-radius: 0.5rem;
+  box-shadow: 0 16px 30px rgba(70, 61, 120, 0.12);
+}
+
+.fd-top-toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 1rem 1.2rem 0.8rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  text-align: center;
+  cursor: pointer;
+}
+
+.fd-top-toggle h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 2vw, 2.3rem);
+  font-weight: 500;
+}
+
+.fd-top-toggle p {
+  margin: 0.15rem 0 0;
+  color: #5f5a87;
+  font-size: 0.95rem;
+}
+
+.fd-top-caret {
+  font-size: 1.4rem;
+  color: #2d2a54;
+  transition: transform 150ms ease;
+}
+
+.fd-top-caret.is-open {
+  transform: rotate(180deg);
+}
+
+.fd-top-body {
+  padding: 0 1.2rem 1rem;
+}
+
+.fd-top-form {
+  width: min(620px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.fd-host-field {
+  width: 100%;
+  display: grid;
+  gap: 0.35rem;
+  color: #3d385d;
+  font-size: 0.95rem;
+}
+
+.fd-host-field span {
+  text-align: center;
+}
+
+.fd-host-field select,
+.fd-host-button {
+  font: inherit;
+}
+
+.fd-host-field select {
+  width: 100%;
+  min-height: 2.7rem;
+  border-radius: 0.35rem;
+  border: 1px solid #cfd3e2;
+  padding: 0.45rem 0.8rem;
+  background: #fff;
+  color: #2c2847;
+}
+
+.fd-host-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 0;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  padding: 0.7rem 1rem;
+  background: #8f8cd2;
+  color: #fff;
+}
+
+.fd-host-field select:focus,
+.fd-host-button:focus {
+  outline: 3px solid rgba(121, 119, 193, 0.22);
+  outline-offset: 2px;
+}
+
+.fd-form-shell {
+  padding: 0.8rem;
+}
+
+.fd-form-host {
+  --mlf-color-bg: transparent;
+  --mlf-color-surface: #ffffff;
+  --mlf-color-border: #d9dce7;
+  --mlf-color-text: #221d36;
+  --mlf-color-text-muted: #5f5a87;
+  --mlf-color-accent: #8f8cd2;
+  --mlf-color-accent-hover: #7a77c8;
+  --mlf-color-danger: #dc4a54;
+  --mlf-color-success: #159b4d;
+  --mlf-control-height: 2.85rem;
+  --mlf-input-radius: 10px;
+  --mlf-layout-gap: 1rem;
+}
+
+.fd-layout-root,
+.fd-layout-children {
+  display: grid;
+  gap: 1rem;
+}
+
+.fd-layout-section {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.fd-layout-copy {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0 0.25rem;
+}
+
+.fd-layout-title {
+  margin: 0;
+  color: #221d36;
+  font-size: 1.85rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.fd-layout-description {
+  margin: 0;
+  color: #5f5a87;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.fd-layout-group {
+  display: grid;
+  gap: 1rem;
+}
+
+.fd-columns-2 {
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  align-items: start;
+}
+
+.fd-columns-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fd-form-errors {
+  padding: 0.85rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(220, 74, 84, 0.25);
+  background: rgba(220, 74, 84, 0.08);
+  color: #9f2030;
+}
+
+.fd-form-errors p {
+  margin: 0;
+}
+
+.fd-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem;
+}
+
+.fd-form-status {
+  color: #5f5a87;
+  font-size: 0.92rem;
+}
+
+.fd-submit-button {
+  min-height: 2.85rem;
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1.15rem;
+  background: #8f8cd2;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fd-submit-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+@media (max-width: 720px) {
+  .fd-shell {
+    padding: 0.65rem;
+  }
+
+  .fd-top-toggle {
+    text-align: left;
+  }
+
+  .fd-host-field span {
+    text-align: left;
+  }
+}
+
+@media (max-width: 980px) {
+  .fd-columns-2,
+  .fd-columns-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fd-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fd-form-status {
+    text-align: center;
+  }
+}
