@@ -1,5 +1,6 @@
-import { createBuiltinRegistry, defineReportDefinition } from "mlform/engine";
+import { createMlRegistryPack } from "mlform/builtins-ml";
 import { createBuiltinPrimitiveRegistry } from "mlform/primitives";
+import { defineReportDefinition } from "mlform/schema";
 import { z } from "zod";
 import { BACKEND_COMPARE_REPORT_TAG } from "../backend-compare-report.js";
 
@@ -105,7 +106,7 @@ const backendCompareReportDefinition = defineReportDefinition({
 });
 
 export const createAppRegistry = () =>
-  createBuiltinRegistry().registerReport(backendCompareReportDefinition);
+  createMlRegistryPack().registry.registerReport(backendCompareReportDefinition);
 
 export const createAppPrimitiveRegistry = () =>
   createBuiltinPrimitiveRegistry().registerReport(

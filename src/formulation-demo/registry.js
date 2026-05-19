@@ -1,4 +1,5 @@
-import { createBuiltinRegistry, defineReportDefinition } from "mlform/engine";
+import { createMlRegistryPack } from "mlform/builtins-ml";
+import { defineReportDefinition } from "mlform/schema";
 import { z } from "zod";
 
 const baseReportSchema = {
@@ -39,4 +40,4 @@ const formulationPredictionReportDefinition = defineReportDefinition({
 });
 
 export const createFormulationRegistry = () =>
-  createBuiltinRegistry().registerReport(formulationPredictionReportDefinition);
+  createMlRegistryPack().registry.registerReport(formulationPredictionReportDefinition);

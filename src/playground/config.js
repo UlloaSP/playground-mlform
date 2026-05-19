@@ -1,10 +1,10 @@
-import { defaultKitDesignSystem, defaultKitLabels } from "mlform";
+import { defaultKitDesignSystem, defaultKitLabels } from "mlform/kit";
 
 export const PLAYGROUND_DESIGN_SYSTEM = {
   ...defaultKitDesignSystem,
-  recipe: "default",
-  theme: "cobalt",
-  mode: "light",
+  recipe: "minimal",
+  theme: "airbnb",
+  mode: "dark",
 };
 
 export const PLAYGROUND_LABELS = {

@@ -1,4 +1,4 @@
-import { mountAccordionForm, mountForm, mountTabsForm, mountWizardForm } from "mlform";
+import { mountForm } from "mlform/kit";
 import { PLAYGROUND_ACCORDION_LAYOUTS } from "./accordion-layouts.js";
 import { createAppPrimitiveRegistry, createAppRegistry } from "./report-definition.js";
 import { PLAYGROUND_DESIGN_SYSTEM, PLAYGROUND_LABELS, PRIMITIVE_TEXT } from "./config.js";
@@ -10,6 +10,9 @@ import { PLAYGROUND_WIZARD_LAYOUTS } from "./wizard-layouts.js";
 const createTransport = (transportMode) =>
   transportMode === "network" ? createAggregateTransport() : createMockAggregateTransport();
 
+const normalizeSinglePageLayout = (layout) =>
+  typeof layout === "string" ? { kind: layout } : layout;
+
 export const mountPlayground = (
   container = document.body,
   { layout = "stacked", reportPane = "always", transportMode = "mock" } = {},
@@ -19,7 +22,7 @@ export const mountPlayground = (
     transport: createTransport(transportMode),
     registry: createAppRegistry(),
     primitiveRegistry: createAppPrimitiveRegistry(),
-    layout,
+    layout: normalizeSinglePageLayout(layout),
     containerStrategy: "replace",
     reportPane,
     designSystem: PLAYGROUND_DESIGN_SYSTEM,
@@ -31,7 +34,7 @@ export const mountWizardPlayground = (
   container = document.body,
   { variant = "concise", transportMode = "mock" } = {},
 ) =>
-  mountWizardForm(container, {
+  mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createTransport(transportMode),
     registry: createAppRegistry(),
@@ -52,7 +55,7 @@ export const mountTabsPlayground = (
   container = document.body,
   { variant = "classic", transportMode = "mock" } = {},
 ) =>
-  mountTabsForm(container, {
+  mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createTransport(transportMode),
     registry: createAppRegistry(),
@@ -71,7 +74,7 @@ export const mountAccordionPlayground = (
   container = document.body,
   { variant = "classic", transportMode = "mock" } = {},
 ) =>
-  mountAccordionForm(container, {
+  mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createTransport(transportMode),
     registry: createAppRegistry(),

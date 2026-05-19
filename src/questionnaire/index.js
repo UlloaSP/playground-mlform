@@ -1,12 +1,11 @@
-import { mountQuestionnaire } from "mlform/questionnaire";
-import { defaultKitDesignSystem } from "mlform";
+import { defaultKitDesignSystem, mountForm } from "mlform/kit";
 import { QUESTIONNAIRE_SCHEMA } from "./schema.js";
 import { createQuestionnaireTransport } from "./transport.js";
 
 const DESIGN_SYSTEM = {
   ...defaultKitDesignSystem,
   recipe: "default",
-  theme: "cobalt",
+  theme: "airbnb",
   mode: "light",
 };
 
@@ -36,8 +35,37 @@ const PRIMITIVE_TEXT = {
 };
 
 export const mountAppQuestionnaire = (container = document.body) =>
-  mountQuestionnaire(container, {
-    schema: QUESTIONNAIRE_SCHEMA,
+  mountForm(container, {
+    schema: {
+      fields: QUESTIONNAIRE_SCHEMA.steps.flatMap((step) => step.fields),
+      reports: [
+        {
+          id: "evalScore",
+          kind: "regressor",
+          label: "Evaluation score",
+          unit: "pts",
+          precision: 2,
+        },
+      ],
+      explanations: [],
+    },
+    layout: {
+      kind: "wizard",
+      steps: QUESTIONNAIRE_SCHEMA.steps.map((step, index) => ({
+        id: step.id,
+        title: step.title,
+        description: step.description,
+        children: [
+          ...step.fields.map((field) => ({
+            kind: "field",
+            field: field.id,
+          })),
+          ...(index === QUESTIONNAIRE_SCHEMA.steps.length - 1
+            ? [{ kind: "report", report: "evalScore" }]
+            : []),
+        ],
+      })),
+    },
     transport: createQuestionnaireTransport(),
     designSystem: DESIGN_SYSTEM,
     labels: LABELS,

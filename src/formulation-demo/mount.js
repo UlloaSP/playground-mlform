@@ -1,4 +1,4 @@
-import { createFormView, defaultKitLabels } from "mlform";
+import { createFormView, defaultKitLabels } from "mlform/kit";
 import { primitiveStaticText } from "mlform/primitives";
 import { FORMULATION_EXAMPLES, getExampleById } from "./examples.js";
 import { MATERIAL_CATALOG, getMaterialFieldId, getMaterialOptionLabel } from "./material-catalog.js";
@@ -115,7 +115,7 @@ const createValidators = () => [
 ];
 
 const createLayout = () => ({
-  kind: "single-page",
+  kind: "stacked",
   children: [
     {
       kind: "section",
@@ -173,23 +173,65 @@ const createView = (initialValues) =>
     schema: createFormulationSchema(),
     transport: createFormulationTransport(),
     registry: createFormulationRegistry(),
-    primitiveRegistry: createFormulationPrimitiveRegistry(),
     initialValues,
     validators: createValidators(),
     layout: createLayout(),
   });
 
+const resolveReportDescriptor = (report) => {
+  if (report.descriptor) {
+    return report.descriptor;
+  }
+
+  if (report.kind === "formulation-prediction") {
+    return {
+      component: "formulation-prediction-report",
+      props: {
+        id: report.id,
+        kind: report.kind,
+        label: report.config.label ?? "Prediction",
+        description: report.config.description ?? "",
+        payload: report.state.payload,
+        error: report.state.error,
+        state: report.state.status,
+      },
+    };
+  }
+
+  return null;
+};
+
 const renderFieldFrame = (field, registry) => {
   const element = document.createElement(FIELD_FRAME_TAG);
   element.controller = field.controller;
+  element.descriptor = field.descriptor;
   element.registry = registry;
   element.text = PRIMITIVE_TEXT;
   return element;
 };
 
 const renderReportFrame = (report, registry, lastResult) => {
+  const descriptor = resolveReportDescriptor(report);
+
+  if (!descriptor) {
+    const fallback = document.createElement("pre");
+    fallback.className = "fd-report-debug";
+    fallback.textContent = JSON.stringify(
+      {
+        id: report.id,
+        kind: report.kind,
+        state: report.state,
+        descriptor: report.descriptor,
+      },
+      null,
+      2,
+    );
+    return fallback;
+  }
+
   const element = document.createElement(REPORT_FRAME_TAG);
   element.controller = report.controller;
+  element.descriptor = descriptor;
   element.registry = registry;
   element.text = PRIMITIVE_TEXT;
   element.lastResult = lastResult;
@@ -368,7 +410,7 @@ const createMaterialsPanel = (snapshot, view) => {
   return panel;
 };
 
-const renderNode = (node, snapshot, view, reportRefs) => {
+const renderNode = (node, snapshot, view, primitiveRegistry, reportRefs) => {
   if (node.kind === "section") {
     const section = document.createElement("section");
     section.className = "fd-layout-section";
@@ -402,7 +444,7 @@ const renderNode = (node, snapshot, view, reportRefs) => {
       children.append(createMaterialsPanel(snapshot, view));
     } else {
       node.children.forEach((child) => {
-        children.append(renderNode(child, snapshot, view, reportRefs));
+        children.append(renderNode(child, snapshot, view, primitiveRegistry, reportRefs));
       });
     }
 
@@ -415,20 +457,20 @@ const renderNode = (node, snapshot, view, reportRefs) => {
     group.className = `fd-layout-group${node.columns ? ` fd-columns-${node.columns}` : ""}`;
     group.dataset.groupId = node.id;
     node.children.forEach((child) => {
-      group.append(renderNode(child, snapshot, view, reportRefs));
+      group.append(renderNode(child, snapshot, view, primitiveRegistry, reportRefs));
     });
     return group;
   }
 
   if (node.kind === "field") {
     const field = snapshot.fields.find((entry) => entry.id === node.field);
-    return field ? renderFieldFrame(field, view.primitiveRegistry) : document.createElement("div");
+    return field ? renderFieldFrame(field, primitiveRegistry) : document.createElement("div");
   }
 
   if (node.kind === "report") {
     const report = snapshot.reports.find((entry) => entry.id === node.report);
     const element = report
-      ? renderReportFrame(report, view.primitiveRegistry, snapshot.form.lastResult)
+      ? renderReportFrame(report, primitiveRegistry, snapshot.form.lastResult)
       : document.createElement("div");
     if (report) {
       reportRefs.push(element);
@@ -439,14 +481,14 @@ const renderNode = (node, snapshot, view, reportRefs) => {
   return document.createElement("div");
 };
 
-const createViewShell = (view, host) => {
+const createViewShell = (view, host, primitiveRegistry) => {
   const render = (snapshot) => {
     const reportRefs = [];
     const root = document.createElement("div");
     root.className = "fd-layout-root";
 
     snapshot.layout.children.forEach((node) => {
-      root.append(renderNode(node, snapshot, view, reportRefs));
+      root.append(renderNode(node, snapshot, view, primitiveRegistry, reportRefs));
     });
 
     const formColumn = root.querySelector('[data-section-id="form-column"] > .fd-layout-children');
@@ -532,11 +574,21 @@ export const mountFormulationDemo = (container = document.body) => {
   let selectedExampleId = "example-2";
   populateExampleSelect(select, selectedExampleId);
 
-  const view = createView(getExampleById(selectedExampleId)?.values);
-  const rendered = createViewShell(view, formHost);
-  const unsubscribe = view.subscribe((snapshot) => {
-    rendered.sync(snapshot);
-  });
+  let view = null;
+  let rendered = null;
+  let unsubscribe = () => {};
+  const primitiveRegistry = createFormulationPrimitiveRegistry();
+
+  const mountView = (initialValues) => {
+    unsubscribe();
+    view = createView(initialValues);
+    rendered = createViewShell(view, formHost, primitiveRegistry);
+    unsubscribe = view.subscribe((snapshot) => {
+      rendered.sync(snapshot);
+    });
+  };
+
+  mountView(getExampleById(selectedExampleId)?.values);
 
   select.addEventListener("change", () => {
     selectedExampleId = select.value;
@@ -547,7 +599,7 @@ export const mountFormulationDemo = (container = document.body) => {
     if (!example) {
       return;
     }
-    view.form.setValues(example.values);
+    mountView(example.values);
   });
 
   topToggle?.addEventListener("click", () => {

@@ -1,8 +1,9 @@
 export const PLAYGROUND_ACCORDION_LAYOUTS = {
   classic: {
-    kind: "accordion",
-    sections: [
+    kind: "stacked",
+    children: [
       {
+        kind: "section",
         id: "release",
         title: "Release controls",
         description: "Core metadata and rollout controls.",
@@ -27,6 +28,7 @@ export const PLAYGROUND_ACCORDION_LAYOUTS = {
         ],
       },
       {
+        kind: "section",
         id: "signals",
         title: "Signals",
         description: "Time-series and operational feature inputs.",
@@ -45,6 +47,7 @@ export const PLAYGROUND_ACCORDION_LAYOUTS = {
         ],
       },
       {
+        kind: "section",
         id: "reports",
         title: "Reports",
         description: "Backend outputs and aggregate comparison.",
@@ -68,9 +71,10 @@ export const PLAYGROUND_ACCORDION_LAYOUTS = {
     ],
   },
   review: {
-    kind: "accordion",
-    sections: [
+    kind: "stacked",
+    children: [
       {
+        kind: "section",
         id: "identity",
         title: "Identity",
         description: "Naming, thresholds and approval.",
@@ -95,6 +99,7 @@ export const PLAYGROUND_ACCORDION_LAYOUTS = {
         ],
       },
       {
+        kind: "section",
         id: "evidence",
         title: "Evidence",
         description: "Observed data grouped by source.",
@@ -107,6 +112,7 @@ export const PLAYGROUND_ACCORDION_LAYOUTS = {
         ],
       },
       {
+        kind: "section",
         id: "decision",
         title: "Decision",
         description: "Aggregate and per-backend reports for final review.",

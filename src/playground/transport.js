@@ -1,4 +1,4 @@
-import { createFanoutTransport, createJsonTransport, pipe, withRetry, withTimeout } from "mlform";
+import { createFanoutTransport, createJsonTransport, pipe, withRetry, withTimeout } from "mlform/transport";
 import { BACKENDS, buildBackendResponse, getBackendUrl } from "./shared/model.js";
 
 const isRecord = (value) => typeof value === "object" && value !== null;

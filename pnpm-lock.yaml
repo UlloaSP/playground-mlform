@@ -5,15 +5,15 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  mlform: link:../../Users/ulloa/AppData/Local/pnpm/global/5/node_modules/mlform
+  mlform: link:../mlform
 
 importers:
 
   .:
     dependencies:
       mlform:
-        specifier: link:../../Users/ulloa/AppData/Local/pnpm/global/5/node_modules/mlform
-        version: link:../../Users/ulloa/AppData/Local/pnpm/global/5/node_modules/mlform
+        specifier: link:../mlform
+        version: link:../mlform
       react:
         specifier: ^19.1.1
         version: 19.2.5
