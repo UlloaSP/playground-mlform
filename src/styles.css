@@ -1,0 +1,177 @@
+:root {
+  font-family: "Aptos", "Segoe UI Variable Text", "Trebuchet MS", sans-serif;
+  color: #1f1611;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.28), transparent 26%),
+    linear-gradient(180deg, #9b98cf 0%, #9290c8 100%);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+#root,
+body > div {
+  min-height: 100dvh;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  padding: 1rem;
+}
+
+.app-menu {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 50;
+}
+
+.app-menu-button {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-content: center;
+  gap: 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: #201936;
+  box-shadow: 0 16px 34px rgba(58, 49, 96, 0.22);
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.app-menu-button span {
+  width: 1.18rem;
+  height: 2px;
+  display: block;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.app-menu-button:hover,
+.app-menu-button:focus-visible,
+.app-menu.is-open .app-menu-button {
+  transform: translateY(-1px);
+  background: #ffffff;
+  box-shadow: 0 20px 40px rgba(58, 49, 96, 0.3);
+}
+
+.app-menu-list {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  left: 0;
+  width: 14rem;
+  padding: 0.45rem;
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid rgba(92, 85, 149, 0.22);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 22px 44px rgba(58, 49, 96, 0.24);
+  transform: translateY(-0.35rem) scale(0.98);
+  transform-origin: top left;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.app-menu.is-open .app-menu-list {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.app-menu-option {
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: #332d59;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-menu-option:hover,
+.app-menu-option:focus-visible {
+  background: rgba(228, 225, 255, 0.95);
+}
+
+.app-menu-option.is-active {
+  background: linear-gradient(135deg, #7f7cd0 0%, #5f5ab4 100%);
+  color: #fff;
+}
+
+.app-frame {
+  width: min(1320px, 100%);
+  margin: 0 auto;
+}
+
+.app-stage {
+  min-height: 780px;
+}
+
+.app-shell.is-fixed-layout {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-shell.is-fixed-layout .app-frame,
+.app-shell.is-fixed-layout .app-stage {
+  height: calc(100dvh - 2rem);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-shell.is-fixed-layout .app-stage > * {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    padding: 0.7rem;
+  }
+
+  .app-shell.is-fixed-layout .app-frame,
+  .app-shell.is-fixed-layout .app-stage {
+    height: calc(100dvh - 1.4rem);
+  }
+
+  .app-stage {
+    min-height: 640px;
+  }
+}
