@@ -3,8 +3,8 @@ import { defaultKitDesignSystem, defaultKitLabels } from "mlform/kit";
 export const PLAYGROUND_DESIGN_SYSTEM = {
   ...defaultKitDesignSystem,
   recipe: "minimal",
-  theme: "airbnb",
-  mode: "dark",
+  theme: "cobalt",
+  mode: "light",
 };
 
 export const PLAYGROUND_LABELS = {
