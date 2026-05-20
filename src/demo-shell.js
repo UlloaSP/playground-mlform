@@ -1,4 +1,4 @@
-import { mountFormulationDemo } from "./formulation-demo/index.jsx";
+import { mountFormulationDemo } from "./formulation-demo/index.js";
 import {
   mountPlayground,
   mountTabsPlayground,
@@ -14,22 +14,22 @@ const DEMOS = [
   {
     id: "playground-stacked",
     label: "Stacked",
-    mount: (container) => mountPlayground(container, { layout: "sectioned", reportPane: "always" }),
+    mount: (container) => mountPlayground(container, "sectioned"),
   },
   {
     id: "playground-split",
     label: "Split",
-    mount: (container) => mountPlayground(container, { layout: "split", reportPane: "always" }),
+    mount: (container) => mountPlayground(container, "split"),
   },
   {
     id: "wizard-reports",
     label: "Wizard",
-    mount: (container) => mountWizardPlayground(container, { variant: "reports" }),
+    mount: (container) => mountWizardPlayground(container),
   },
   {
     id: "tabs-classic",
     label: "Tabs",
-    mount: (container) => mountTabsPlayground(container, { variant: "classic" }),
+    mount: (container) => mountTabsPlayground(container),
   },
 ];
 

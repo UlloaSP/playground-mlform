@@ -1,5 +1,4 @@
 import { createServer as createViteServer } from "vite";
-import { startBackendServers, stopBackendServers } from "./start-backends.mjs";
 
 const vite = await createViteServer({
   server: {
@@ -21,7 +20,6 @@ const shutdown = async (code) => {
   try {
     await vite.close();
   } finally {
-    await stopBackendServers();
     process.exit(code);
   }
 };
@@ -30,7 +28,6 @@ process.on("SIGINT", () => void shutdown(0));
 process.on("SIGTERM", () => void shutdown(0));
 
 try {
-  await startBackendServers();
   await vite.listen();
   vite.printUrls();
   console.log("[dev] ready");

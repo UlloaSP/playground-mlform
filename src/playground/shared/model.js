@@ -4,9 +4,6 @@ export const BACKENDS = [
   {
     id: "baseline",
     label: "Baseline",
-    protocol: "rest",
-    port: 4301,
-    path: "/predict",
     recommendationBias: 0,
     latencyBias: 0,
     scoreBias: 0,
@@ -14,9 +11,6 @@ export const BACKENDS = [
   {
     id: "optimistic",
     label: "Optimistic",
-    protocol: "graphql",
-    port: 4302,
-    path: "/graphql",
     recommendationBias: 16,
     latencyBias: -24,
     scoreBias: 10,
@@ -24,16 +18,11 @@ export const BACKENDS = [
   {
     id: "conservative",
     label: "Conservative",
-    protocol: "json-rpc",
-    port: 4303,
-    path: "/rpc",
     recommendationBias: -12,
     latencyBias: 28,
     scoreBias: -8,
   },
 ];
-
-export const getBackendUrl = (backend) => `http://127.0.0.1:${backend.port}${backend.path}`;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -148,7 +137,6 @@ export const buildBackendResponse = (backend, inputs) => {
     meta: {
       backend: backend.id,
       label: backend.label,
-      protocol: backend.protocol,
       generatedAt: new Date().toISOString(),
     },
   };
