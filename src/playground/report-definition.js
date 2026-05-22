@@ -1,4 +1,4 @@
-import { createMlRegistryPack } from "mlform/builtins-ml";
+import { createMlRegistryPack } from "mlform/builtins";
 import { createBuiltinPrimitiveRegistry } from "mlform/primitives";
 import { defineReportDefinition } from "mlform/schema";
 import { z } from "zod";
