@@ -112,7 +112,7 @@ const backendCompareReportPresenter = {
 export const createAppRegistryPack = () => {
   const pack = createMlRegistryPack();
   pack.registry.registerReport(backendCompareReportDefinition);
-  pack.presentationRegistry.registerReport(backendCompareReportPresenter);
+  pack.descriptorRegistry.registerReport(backendCompareReportPresenter);
   return pack;
 };
 

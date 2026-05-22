@@ -46,6 +46,6 @@ const formulationPredictionReportPresenter = {
 export const createFormulationRegistryPack = () => {
   const pack = createMlRegistryPack();
   pack.registry.registerReport(formulationPredictionReportDefinition);
-  pack.presentationRegistry.registerReport(formulationPredictionReportPresenter);
+  pack.descriptorRegistry.registerReport(formulationPredictionReportPresenter);
   return pack;
 };

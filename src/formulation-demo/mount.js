@@ -174,7 +174,7 @@ const createView = (initialValues) => {
     schema: createFormulationSchema(),
     transport: createFormulationTransport(),
     registry: pack.registry,
-    presentationRegistry: pack.presentationRegistry,
+    descriptorRegistry: pack.descriptorRegistry,
     behaviors: pack.behaviors,
     initialValues,
     validators: createValidators(),
