@@ -1,5 +1,5 @@
 import { mountForm } from "mlform/kit";
-import { createAppPrimitiveRegistry, createAppRegistry } from "./report-definition.js";
+import { createAppPrimitiveRegistry, createAppRegistryPack } from "./report-definition.js";
 import { PLAYGROUND_DESIGN_SYSTEM, PLAYGROUND_LABELS, PRIMITIVE_TEXT } from "./config.js";
 import { FORM_SCHEMA } from "./schema.js";
 import { PLAYGROUND_SECTIONED_LAYOUT } from "./section-layouts.js";
@@ -13,11 +13,14 @@ const normalizeSinglePageLayout = (layout) =>
 export const mountPlayground = (
   container = document.body,
   layout = "stacked",
-) =>
-  mountForm(container, {
+) => {
+  const pack = createAppRegistryPack();
+  return mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createAggregateTransport(),
-    registry: createAppRegistry(),
+    registry: pack.registry,
+    presentationRegistry: pack.presentationRegistry,
+    behaviors: pack.behaviors,
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: normalizeSinglePageLayout(layout),
     containerStrategy: "replace",
@@ -26,12 +29,16 @@ export const mountPlayground = (
     labels: PLAYGROUND_LABELS,
     primitiveText: PRIMITIVE_TEXT,
   });
+};
 
-export const mountWizardPlayground = (container = document.body) =>
-  mountForm(container, {
+export const mountWizardPlayground = (container = document.body) => {
+  const pack = createAppRegistryPack();
+  return mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createAggregateTransport(),
-    registry: createAppRegistry(),
+    registry: pack.registry,
+    presentationRegistry: pack.presentationRegistry,
+    behaviors: pack.behaviors,
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: PLAYGROUND_WIZARD_LAYOUTS.reports,
     designSystem: PLAYGROUND_DESIGN_SYSTEM,
@@ -44,12 +51,16 @@ export const mountWizardPlayground = (container = document.body) =>
     },
     primitiveText: PRIMITIVE_TEXT,
   });
+};
 
-export const mountTabsPlayground = (container = document.body) =>
-  mountForm(container, {
+export const mountTabsPlayground = (container = document.body) => {
+  const pack = createAppRegistryPack();
+  return mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createAggregateTransport(),
-    registry: createAppRegistry(),
+    registry: pack.registry,
+    presentationRegistry: pack.presentationRegistry,
+    behaviors: pack.behaviors,
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: PLAYGROUND_TABS_LAYOUTS.classic,
     designSystem: PLAYGROUND_DESIGN_SYSTEM,
@@ -60,3 +71,4 @@ export const mountTabsPlayground = (container = document.body) =>
     },
     primitiveText: PRIMITIVE_TEXT,
   });
+};

@@ -85,6 +85,10 @@ const backendCompareReportDefinition = defineReportDefinition({
 
     return items.length > 0 ? { items } : undefined;
   },
+});
+
+const backendCompareReportPresenter = {
+  kind: "backend-compare",
   describe(config, context) {
     if (context.state.status === "idle" && context.payload === undefined) {
       return null;
@@ -103,10 +107,14 @@ const backendCompareReportDefinition = defineReportDefinition({
       },
     };
   },
-});
+};
 
-export const createAppRegistry = () =>
-  createMlRegistryPack().registry.registerReport(backendCompareReportDefinition);
+export const createAppRegistryPack = () => {
+  const pack = createMlRegistryPack();
+  pack.registry.registerReport(backendCompareReportDefinition);
+  pack.presentationRegistry.registerReport(backendCompareReportPresenter);
+  return pack;
+};
 
 export const createAppPrimitiveRegistry = () =>
   createBuiltinPrimitiveRegistry().registerReport(

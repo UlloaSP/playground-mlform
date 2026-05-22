@@ -19,6 +19,10 @@ const formulationPredictionReportDefinition = defineReportDefinition({
   resolvePayload(config, context) {
     return context.result.reports[config.source ?? "prediction"];
   },
+});
+
+const formulationPredictionReportPresenter = {
+  kind: "formulation-prediction",
   describe(config, context) {
     if (context.state.status === "idle" && context.payload === undefined) {
       return null;
@@ -37,7 +41,11 @@ const formulationPredictionReportDefinition = defineReportDefinition({
       },
     };
   },
-});
+};
 
-export const createFormulationRegistry = () =>
-  createMlRegistryPack().registry.registerReport(formulationPredictionReportDefinition);
+export const createFormulationRegistryPack = () => {
+  const pack = createMlRegistryPack();
+  pack.registry.registerReport(formulationPredictionReportDefinition);
+  pack.presentationRegistry.registerReport(formulationPredictionReportPresenter);
+  return pack;
+};

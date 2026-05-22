@@ -1,4 +1,4 @@
-# prueba-mlform
+# playground-mlform
 
 Playground Vite para probar `mlform` enlazado desde `../mlform`.
 

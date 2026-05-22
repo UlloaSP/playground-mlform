@@ -3,7 +3,7 @@ import { primitiveStaticText } from "mlform/primitives";
 import { FORMULATION_EXAMPLES, getExampleById } from "./examples.js";
 import { MATERIAL_CATALOG, getMaterialFieldId, getMaterialOptionLabel } from "./material-catalog.js";
 import { createFormulationPrimitiveRegistry } from "./primitive-registry.js";
-import { createFormulationRegistry } from "./registry.js";
+import { createFormulationRegistryPack } from "./registry.js";
 import { createFormulationSchema } from "./schema.js";
 import { createFormulationTransport } from "./transport.js";
 
@@ -168,15 +168,19 @@ const createLayout = () => ({
   ],
 });
 
-const createView = (initialValues) =>
-  createFormView({
+const createView = (initialValues) => {
+  const pack = createFormulationRegistryPack();
+  return createFormView({
     schema: createFormulationSchema(),
     transport: createFormulationTransport(),
-    registry: createFormulationRegistry(),
+    registry: pack.registry,
+    presentationRegistry: pack.presentationRegistry,
+    behaviors: pack.behaviors,
     initialValues,
     validators: createValidators(),
     layout: createLayout(),
   });
+};
 
 const resolveReportDescriptor = (report) => {
   if (report.descriptor) {
