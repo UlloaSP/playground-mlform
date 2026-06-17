@@ -5,6 +5,7 @@ export const createFormulationSchema = () => ({
     ...MATERIAL_CATALOG.map((material) => ({
       id: getMaterialFieldId(material.id),
       kind: "number",
+      mappedTo: material.id,
       label: getMaterialOptionLabel(material.id),
       description: `${material.category} from ${material.supplier}.`,
       defaultValue: 0,
@@ -16,6 +17,7 @@ export const createFormulationSchema = () => ({
     {
       id: "extruderbrand",
       kind: "category",
+      mappedTo: "extruderbrand",
       label: "Extruder brand",
       required: true,
       defaultValue: "Process_11",
@@ -29,6 +31,7 @@ export const createFormulationSchema = () => ({
     {
       id: "extrusionspeed",
       kind: "number",
+      mappedTo: "extrusionspeed",
       label: "Extrusion speed (RPM)",
       required: true,
       defaultValue: 15,
@@ -40,6 +43,7 @@ export const createFormulationSchema = () => ({
     {
       id: "printerbrand",
       kind: "category",
+      mappedTo: "printerbrand",
       label: "Printer brand",
       required: true,
       defaultValue: "good_bot_4025-mp",
@@ -53,6 +57,7 @@ export const createFormulationSchema = () => ({
     {
       id: "platetemperature",
       kind: "number",
+      mappedTo: "platetemperature",
       label: "Plat. temperature (°C)",
       required: true,
       defaultValue: 50,
@@ -64,6 +69,7 @@ export const createFormulationSchema = () => ({
     {
       id: "printingspeed",
       kind: "number",
+      mappedTo: "printingspeed",
       label: "Printing speed (mm/s)",
       required: true,
       defaultValue: 30,
@@ -75,6 +81,7 @@ export const createFormulationSchema = () => ({
     {
       id: "objecttype",
       kind: "category",
+      mappedTo: "objecttype",
       label: "Object",
       required: true,
       defaultValue: "tablet",
@@ -88,6 +95,7 @@ export const createFormulationSchema = () => ({
     {
       id: "shape",
       kind: "category",
+      mappedTo: "shape",
       label: "Shape",
       required: true,
       defaultValue: "cylinder",
@@ -101,6 +109,7 @@ export const createFormulationSchema = () => ({
     {
       id: "surfacearea",
       kind: "number",
+      mappedTo: "surfacearea",
       label: "Surface Area (mm²)",
       required: true,
       defaultValue: 1114.01,
@@ -112,6 +121,7 @@ export const createFormulationSchema = () => ({
     {
       id: "volume",
       kind: "number",
+      mappedTo: "volume",
       label: "Volume (mm³)",
       required: true,
       defaultValue: 554.26,
@@ -123,6 +133,7 @@ export const createFormulationSchema = () => ({
     {
       id: "mediavolume",
       kind: "number",
+      mappedTo: "mediavolume",
       label: "Media volume (mm³)",
       required: true,
       defaultValue: 500,
@@ -134,6 +145,7 @@ export const createFormulationSchema = () => ({
     {
       id: "mediaph",
       kind: "number",
+      mappedTo: "mediaph",
       label: "Media pH",
       required: true,
       defaultValue: 3,
@@ -149,7 +161,7 @@ export const createFormulationSchema = () => ({
       kind: "formulation-prediction",
       label: "Prediction",
       description: "Prediction summary and dissolution profile.",
-      source: "prediction",
+      mappedTo: "prediction",
     },
   ],
 });

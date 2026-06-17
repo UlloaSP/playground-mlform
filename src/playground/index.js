@@ -1,6 +1,7 @@
 import { mountForm } from "mlform/kit";
 import { createAppPrimitiveRegistry, createAppRegistryPack } from "./report-definition.js";
 import { PLAYGROUND_DESIGN_SYSTEM, PLAYGROUND_LABELS, PRIMITIVE_TEXT } from "./config.js";
+import { FIELD_COMBINATIONS_SCHEMA } from "./field-combinations-schema.js";
 import { FORM_SCHEMA } from "./schema.js";
 import { PLAYGROUND_SECTIONED_LAYOUT } from "./section-layouts.js";
 import { PLAYGROUND_TABS_LAYOUTS } from "./tabs-layouts.js";
@@ -13,10 +14,11 @@ const normalizeSinglePageLayout = (layout) =>
 export const mountPlayground = (
   container = document.body,
   layout = "stacked",
+  schema = FORM_SCHEMA,
 ) => {
   const pack = createAppRegistryPack();
   return mountForm(container, {
-    schema: FORM_SCHEMA,
+    schema,
     transport: createAggregateTransport(),
     registry: pack.registry,
     descriptorRegistry: pack.descriptorRegistry,
@@ -30,6 +32,9 @@ export const mountPlayground = (
     primitiveText: PRIMITIVE_TEXT,
   });
 };
+
+export const mountFieldCombinationsPlayground = (container = document.body) =>
+  mountPlayground(container, "split", FIELD_COMBINATIONS_SCHEMA);
 
 export const mountWizardPlayground = (container = document.body) => {
   const pack = createAppRegistryPack();

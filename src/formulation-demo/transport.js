@@ -1,4 +1,4 @@
-import { MATERIAL_CATALOG, getMaterialFieldId } from "./material-catalog.js";
+import { MATERIAL_CATALOG } from "./material-catalog.js";
 import { buildPrediction } from "./prediction.js";
 
 export const createFormulationTransport = () => ({
@@ -6,7 +6,7 @@ export const createFormulationTransport = () => ({
     const serializedValues = { ...(request.serializedValues ?? {}) };
     serializedValues.materials = MATERIAL_CATALOG.map((material) => ({
       material_id: material.id,
-      proportion_w_w: Number(serializedValues[getMaterialFieldId(material.id)] ?? 0),
+      proportion_w_w: Number(serializedValues[material.id] ?? 0),
     }));
 
     const prediction = buildPrediction(serializedValues);

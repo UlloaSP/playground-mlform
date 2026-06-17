@@ -1,12 +1,17 @@
 import { createMlRegistryPack } from "mlform/builtins";
-import { defineReportDefinition } from "mlform/schema";
+import { defineReportDefinition, resolveMappedReportPayload } from "mlform/schema";
 import { z } from "zod";
+
+const mappedToTargetSchema = z.union([z.string().min(1), z.number().int().nonnegative()]);
+const mappedToSchema = z
+  .union([mappedToTargetSchema, z.record(z.string().min(1), mappedToTargetSchema.nullish())])
+  .optional();
 
 const baseReportSchema = {
   id: z.string().optional(),
   label: z.string().optional(),
   description: z.string().optional(),
-  source: z.string().optional(),
+  mappedTo: mappedToSchema,
   ui: z.record(z.string(), z.unknown()).optional(),
 };
 
@@ -17,7 +22,7 @@ const formulationPredictionReportDefinition = defineReportDefinition({
     ...baseReportSchema,
   }),
   resolvePayload(config, context) {
-    return context.result.reports[config.source ?? "prediction"];
+    return resolveMappedReportPayload(context.report, context.result);
   },
 });
 

@@ -3,7 +3,8 @@ const round = (value, digits = 2) => Number(value.toFixed(digits));
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 const getMaterialPercent = (materials, materialId) =>
-  materials.find((entry) => entry.materialId === materialId)?.proportion ?? 0;
+  materials.find((entry) => entry.material_id === materialId || entry.materialId === materialId)
+    ?.proportion_w_w ?? 0;
 
 export const buildPrediction = (inputs) => {
   const materials = Array.isArray(inputs.materials) ? inputs.materials : [];

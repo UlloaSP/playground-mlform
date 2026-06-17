@@ -5,6 +5,7 @@ export const FORM_SCHEMA = {
     {
       id: "release-name",
       kind: "text",
+      mappedTo: "release_name",
       label: "Release name",
       description: "Text field with the standard built-in text restrictions.",
       required: true,
@@ -17,6 +18,7 @@ export const FORM_SCHEMA = {
     {
       id: "training-epochs",
       kind: "number",
+      mappedTo: "training_epochs",
       label: "Training epochs",
       description: "Numeric field used by all backends to derive their prediction.",
       required: true,
@@ -29,6 +31,10 @@ export const FORM_SCHEMA = {
     {
       id: "confidence-threshold",
       kind: "number",
+      mappedTo: {
+        default: "confidence_threshold",
+        optimistic: 0,
+      },
       label: "Confidence threshold",
       description: "Minimum confidence score to accept a recommendation. Shown as a range slider.",
       defaultValue: 0.75,
@@ -40,6 +46,7 @@ export const FORM_SCHEMA = {
     {
       id: "human-approval",
       kind: "boolean",
+      mappedTo: "human_approval",
       label: "Human approval",
       description: "Boolean field with explicit labels.",
       required: true,
@@ -50,6 +57,7 @@ export const FORM_SCHEMA = {
     {
       id: "channel-prototype",
       kind: "number",
+      mappedTo: "channel_prototype",
       label: "Prototype feature",
       hidden: true,
       inactiveFieldPolicy: "include",
@@ -57,6 +65,7 @@ export const FORM_SCHEMA = {
     {
       id: "channel-canary",
       kind: "number",
+      mappedTo: "channel_canary",
       label: "Canary feature",
       hidden: true,
       inactiveFieldPolicy: "include",
@@ -64,6 +73,7 @@ export const FORM_SCHEMA = {
     {
       id: "channel-regional",
       kind: "number",
+      mappedTo: "channel_regional",
       label: "Regional feature",
       hidden: true,
       inactiveFieldPolicy: "include",
@@ -71,6 +81,7 @@ export const FORM_SCHEMA = {
     {
       id: "channel-production",
       kind: "number",
+      mappedTo: "channel_production",
       label: "Production feature",
       hidden: true,
       inactiveFieldPolicy: "include",
@@ -128,6 +139,7 @@ export const FORM_SCHEMA = {
     {
       id: "evaluation-date",
       kind: "date",
+      mappedTo: "evaluation_date",
       label: "Evaluation date",
       description: "Date field with limits and weekly step.",
       required: true,
@@ -139,6 +151,7 @@ export const FORM_SCHEMA = {
     {
       id: "daily-signal",
       kind: "series",
+      mappedTo: "daily_signal",
       label: "Daily signal",
       description:
         "Date + numeric series that all backends read to build recommendation, latency and launch score.",
@@ -169,6 +182,7 @@ export const FORM_SCHEMA = {
     {
       id: "channel-performance",
       kind: "series",
+      mappedTo: "channel_performance",
       label: "Channel performance",
       description:
         "Category + numeric series mapping each deployment channel to its observed score.",
@@ -201,6 +215,7 @@ export const FORM_SCHEMA = {
     {
       id: "feature-flags",
       kind: "series",
+      mappedTo: "feature_flags",
       label: "Feature flags",
       description:
         "Text + boolean series listing each feature flag and whether it is enabled for this release.",
@@ -229,6 +244,7 @@ export const FORM_SCHEMA = {
     {
       id: "version-scores",
       kind: "series",
+      mappedTo: "version_scores",
       label: "Version scores",
       description:
         "Text + category series pairing each model version with its quality tier.",
@@ -266,7 +282,7 @@ export const FORM_SCHEMA = {
         kind: "classifier",
         label: `${backend.label} recommendation`,
         description: `${backend.label} backend classifier output.`,
-        source: `${backend.id}.releaseRecommendation`,
+        mappedTo: `${backend.id}.releaseRecommendation`,
         labels: CLASSIFIER_LABELS,
         details: true,
       },
@@ -275,7 +291,7 @@ export const FORM_SCHEMA = {
         kind: "regressor",
         label: `${backend.label} latency`,
         description: `${backend.label} backend latency forecast.`,
-        source: `${backend.id}.latencyForecast`,
+        mappedTo: `${backend.id}.latencyForecast`,
         unit: "ms",
         precision: 1,
       },

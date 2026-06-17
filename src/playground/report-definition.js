@@ -5,12 +5,16 @@ import { z } from "zod";
 import { BACKEND_COMPARE_REPORT_TAG } from "../backend-compare-report.js";
 
 const isRecord = (value) => typeof value === "object" && value !== null;
+const mappedToTargetSchema = z.union([z.string().min(1), z.number().int().nonnegative()]);
+const mappedToSchema = z
+  .union([mappedToTargetSchema, z.record(z.string().min(1), mappedToTargetSchema.nullish())])
+  .optional();
 
 const baseReportSchema = {
   id: z.string().optional(),
   label: z.string().optional(),
   description: z.string().optional(),
-  source: z.string().optional(),
+  mappedTo: mappedToSchema,
 };
 
 const extractMaxProbability = (payload) => {

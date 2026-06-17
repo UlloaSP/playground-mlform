@@ -1,5 +1,6 @@
 import { mountFormulationDemo } from "./formulation-demo/index.js";
 import {
+  mountFieldCombinationsPlayground,
   mountPlayground,
   mountTabsPlayground,
   mountWizardPlayground,
@@ -22,6 +23,11 @@ const DEMOS = [
     mount: (container) => mountPlayground(container, "split"),
   },
   {
+    id: "field-combinations",
+    label: "Field combos",
+    mount: (container) => mountFieldCombinationsPlayground(container),
+  },
+  {
     id: "wizard-reports",
     label: "Wizard",
     mount: (container) => mountWizardPlayground(container),
@@ -34,7 +40,12 @@ const DEMOS = [
 ];
 
 const DEFAULT_DEMO_ID = DEMOS[0].id;
-const FIXED_LAYOUT_DEMO_IDS = new Set(["playground-split", "wizard-reports", "tabs-classic"]);
+const FIXED_LAYOUT_DEMO_IDS = new Set([
+  "playground-split",
+  "field-combinations",
+  "wizard-reports",
+  "tabs-classic",
+]);
 
 const getDemoById = (demoId) => DEMOS.find((demo) => demo.id === demoId) ?? DEMOS[0];
 
