@@ -2,7 +2,7 @@ import { BACKENDS, buildBackendResponse } from "./shared/model.js";
 
 export const createAggregateTransport = () => ({
   submit: async (request) => {
-    const inputs = request.serializedValues ?? {};
+    const inputs = request.modelValues;
 
     await new Promise((resolve) => setTimeout(resolve, 220));
 
@@ -12,12 +12,15 @@ export const createAggregateTransport = () => ({
         { ...buildBackendResponse(backend, inputs), id: backend.id, label: backend.label },
       ]),
     );
-    const reports = {};
+    const reports = [];
 
     for (const backend of BACKENDS) {
       const backendReports = backends[backend.id]?.reports ?? {};
       for (const [reportKey, payload] of Object.entries(backendReports)) {
-        reports[`${backend.id}.${reportKey}`] = payload;
+        reports.push({
+          mappedTo: `${backend.id}.${reportKey}`,
+          payload,
+        });
       }
     }
 

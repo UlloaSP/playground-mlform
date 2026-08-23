@@ -22,6 +22,7 @@ export const PLAYGROUND_TABS_LAYOUTS = {
                   { kind: "field", field: "evaluation-date" },
                   { kind: "field", field: "confidence-threshold" },
                   { kind: "field", field: "human-approval" },
+                  { kind: "field", field: "risk-tier" },
                   { kind: "field", field: "channel-prototype" },
                   { kind: "field", field: "channel-canary" },
                   { kind: "field", field: "channel-regional" },

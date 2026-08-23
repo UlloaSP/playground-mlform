@@ -179,6 +179,7 @@ const createView = (initialValues) => {
     initialValues,
     validators: createValidators(),
     layout: createLayout(),
+    reportFetchMode: "all",
   });
 };
 

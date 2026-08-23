@@ -9,6 +9,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "text-required-bounded",
       kind: "text",
+      displayKey: "Text required bounded",
       label: "Text required bounded",
       description: "Required text with minLength, maxLength and pattern.",
       required: true,
@@ -21,6 +22,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "text-optional-empty",
       kind: "text",
+      displayKey: "Text optional empty",
       label: "Text optional empty",
       description: "Optional text with bounds, empty default allowed.",
       defaultValue: "",
@@ -31,6 +33,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "text-pattern-invalid-default",
       kind: "text",
+      displayKey: "Text invalid default",
       label: "Text invalid default",
       description: "Starts invalid to test pattern feedback.",
       required: true,
@@ -42,6 +45,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "text-invalid-length-range",
       kind: "text",
+      displayKey: "Text min greater than max",
       label: "Text min greater than max",
       description: "Exceptional config: minLength greater than maxLength.",
       defaultValue: "edge",
@@ -51,6 +55,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "number-required-bounded",
       kind: "number",
+      displayKey: "Number required bounded",
       label: "Number required bounded",
       description: "Required number with min, max, step and unit.",
       required: true,
@@ -64,6 +69,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "number-range-slider",
       kind: "number",
+      displayKey: "Number optional range",
       label: "Number optional range",
       description: "Optional bounded number renders range input when value exists.",
       defaultValue: 0.5,
@@ -75,6 +81,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "number-step-mismatch",
       kind: "number",
+      displayKey: "Number step mismatch",
       label: "Number step mismatch",
       description: "Starts invalid to test step validation.",
       required: true,
@@ -86,6 +93,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "number-invalid-range",
       kind: "number",
+      displayKey: "Number min greater than max",
       label: "Number min greater than max",
       description: "Exceptional config: min greater than max.",
       defaultValue: 5,
@@ -96,6 +104,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "boolean-required-true",
       kind: "boolean",
+      displayKey: "Boolean required true",
       label: "Boolean required true",
       description: "Required boolean defaulting true.",
       required: true,
@@ -106,6 +115,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "boolean-required-false",
       kind: "boolean",
+      displayKey: "Boolean required false",
       label: "Boolean required false",
       description: "Required boolean defaulting false; must not force true.",
       required: true,
@@ -116,6 +126,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "boolean-optional-default",
       kind: "boolean",
+      displayKey: "Boolean optional default",
       label: "Boolean optional default",
       description: "Optional boolean without explicit default.",
       trueLabel: "On",
@@ -124,6 +135,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "category-required-object-options",
       kind: "category",
+      displayKey: "Category object options",
       label: "Category object options",
       description: "Required category using label/value options.",
       required: true,
@@ -133,6 +145,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "category-string-options",
       kind: "category",
+      displayKey: "Category string options",
       label: "Category string options",
       description: "Category using string options.",
       defaultValue: "small",
@@ -141,6 +154,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "category-invalid-default",
       kind: "category",
+      displayKey: "Category invalid default",
       label: "Category invalid default",
       description: "Starts invalid to test option mismatch feedback.",
       required: true,
@@ -150,6 +164,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "date-required-bounded",
       kind: "date",
+      displayKey: "Date required bounded",
       label: "Date required bounded",
       description: "Required date with min, max and weekly step.",
       required: true,
@@ -161,6 +176,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "date-optional-empty",
       kind: "date",
+      displayKey: "Date optional empty",
       label: "Date optional empty",
       description: "Optional date with no default.",
       min: "2026-01-01T00:00:00.000Z",
@@ -169,6 +185,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "date-step-mismatch",
       kind: "date",
+      displayKey: "Date step mismatch",
       label: "Date step mismatch",
       description: "Starts invalid to test date step feedback.",
       required: true,
@@ -180,6 +197,7 @@ export const FIELD_COMBINATIONS_SCHEMA = {
     {
       id: "date-invalid-range",
       kind: "date",
+      displayKey: "Date min greater than max",
       label: "Date min greater than max",
       description: "Exceptional config: min date greater than max date.",
       defaultValue: "2026-06-15T00:00:00.000Z",

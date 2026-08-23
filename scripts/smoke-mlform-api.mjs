@@ -1,0 +1,122 @@
+import { JSDOM } from "jsdom";
+
+const dom = new JSDOM("<!doctype html><body><div id=\"app\"></div></body>", {
+  url: "http://localhost/",
+});
+
+Object.assign(globalThis, {
+  window: dom.window,
+  document: dom.window.document,
+  customElements: dom.window.customElements,
+  HTMLElement: dom.window.HTMLElement,
+  HTMLButtonElement: dom.window.HTMLButtonElement,
+  HTMLSelectElement: dom.window.HTMLSelectElement,
+  HTMLInputElement: dom.window.HTMLInputElement,
+  Event: dom.window.Event,
+  CustomEvent: dom.window.CustomEvent,
+  AbortController: dom.window.AbortController,
+});
+
+const assert = (condition, message) => {
+  if (!condition) {
+    throw new Error(message);
+  }
+};
+
+const { createFormView } = await import("mlform/kit");
+const { createFormulationRegistryPack } = await import("../src/formulation-demo/registry.js");
+const { createFormulationSchema } = await import("../src/formulation-demo/schema.js");
+const { createFormulationTransport } = await import("../src/formulation-demo/transport.js");
+const { FORM_SCHEMA } = await import("../src/playground/schema.js");
+const { PLAYGROUND_SECTIONED_LAYOUT } = await import("../src/playground/section-layouts.js");
+const { createAggregateTransport } = await import("../src/playground/transport.js");
+const { createAppRegistryPack } = await import("../src/playground/report-definition.js");
+
+const formulationPack = createFormulationRegistryPack();
+const formulationSchema = createFormulationSchema();
+const formulationTransport = createFormulationTransport();
+let formulationRequest;
+let formulationResponse;
+const formulationView = createFormView({
+  schema: formulationSchema,
+  transport: {
+    async submit(request) {
+      formulationRequest = request;
+      formulationResponse = await formulationTransport.submit(request);
+      return formulationResponse;
+    },
+  },
+  registry: formulationPack.registry,
+  descriptorRegistry: formulationPack.descriptorRegistry,
+  behaviors: formulationPack.behaviors,
+  reportFetchMode: "all",
+});
+await formulationView.submitPipeline();
+const formulationPrediction = formulationView
+  .getSnapshot()
+  .reports.find((report) => report.id === "prediction");
+assert(Object.keys(formulationRequest.displayValues).length > 0, "missing formulation displayValues");
+assert("aqoat-as-hg" in formulationRequest.modelValues, "missing formulation modelValues");
+assert("material-aqoat-as-hg" in formulationRequest.fieldValues, "missing formulation fieldValues");
+assert(Array.isArray(formulationResponse.reports), "formulation reports must be an array");
+assert(
+  formulationResponse.reports.some((report) => report.mappedTo === "prediction"),
+  "missing formulation prediction report",
+);
+assert(formulationPrediction?.state.status === "ready", "formulation prediction report not ready");
+assert(
+  formulationPrediction.state.payload?.summary?.mechanicalCharacteristics,
+  "formulation prediction payload missing",
+);
+
+const playgroundPack = createAppRegistryPack();
+const aggregateTransport = createAggregateTransport();
+let playgroundRequest;
+let playgroundResponse;
+const playgroundView = createFormView({
+  schema: FORM_SCHEMA,
+  transport: {
+    async submit(request) {
+      playgroundRequest = request;
+      playgroundResponse = await aggregateTransport.submit(request);
+      return playgroundResponse;
+    },
+  },
+  registry: playgroundPack.registry,
+  descriptorRegistry: playgroundPack.descriptorRegistry,
+  behaviors: playgroundPack.behaviors,
+  layout: PLAYGROUND_SECTIONED_LAYOUT,
+  reportFetchMode: "all",
+});
+await playgroundView.submitPipeline();
+
+const playgroundReports = playgroundView.getSnapshot().reports;
+const backendCompare = playgroundReports.find((report) => report.id === "backend-compare");
+const standardReports = playgroundReports.filter((report) => report.id !== "backend-compare");
+assert(backendCompare?.state.status === "ready", "backend compare report not ready");
+assert(backendCompare.state.payload?.items?.length === 3, "backend compare report missing backend items");
+assert(
+  standardReports.every((report) => report.state.status === "ready"),
+  `standard reports not ready: ${standardReports
+    .filter((report) => report.state.status !== "ready")
+    .map((report) => report.id)
+    .join(", ")}`,
+);
+assert(Array.isArray(playgroundResponse.reports), "playground reports must be an array");
+assert(playgroundResponse.reports.length === 9, "playground report count mismatch");
+assert(Object.keys(playgroundRequest.displayValues).length > 0, "missing playground displayValues");
+assert("release_name" in playgroundRequest.modelValues, "missing playground modelValues");
+assert("release-name" in playgroundRequest.fieldValues, "missing playground fieldValues");
+assert(playgroundRequest.displayValues["Risk tier"] === "medium", "missing onehot display value");
+assert("Evaluation date" in playgroundRequest.displayValues, "missing date display value");
+assert("Version scores" in playgroundRequest.displayValues, "missing series display value");
+assert(
+  Object.keys(playgroundRequest.displayValues).length ===
+    FORM_SCHEMA.fields.filter((field) => !field.hidden).length,
+  `playground displayValues are incomplete: ${Object.keys(playgroundRequest.displayValues).join(", ")}`,
+);
+assert(playgroundRequest.modelValues.risk_medium === 1, "missing selected onehot model value");
+assert(playgroundRequest.modelValues.risk_low === 0, "missing inactive onehot model value");
+assert(playgroundRequest.fieldValues["risk-tier"] === "medium", "missing onehot field value");
+
+console.log("mlform api smoke ok");

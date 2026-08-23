@@ -3,18 +3,16 @@ import { buildPrediction } from "./prediction.js";
 
 export const createFormulationTransport = () => ({
   async submit(request) {
-    const serializedValues = { ...(request.serializedValues ?? {}) };
-    serializedValues.materials = MATERIAL_CATALOG.map((material) => ({
+    const modelValues = { ...request.modelValues };
+    modelValues.materials = MATERIAL_CATALOG.map((material) => ({
       material_id: material.id,
-      proportion_w_w: Number(serializedValues[material.id] ?? 0),
+      proportion_w_w: Number(modelValues[material.id] ?? 0),
     }));
 
-    const prediction = buildPrediction(serializedValues);
+    const prediction = buildPrediction(modelValues);
 
     return {
-      reports: {
-        prediction,
-      },
+      reports: [{ mappedTo: "prediction", payload: prediction }],
       meta: {
         generatedAt: new Date().toISOString(),
         profile: "mock-v1",

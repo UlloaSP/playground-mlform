@@ -27,6 +27,7 @@ export const mountPlayground = (
     layout: normalizeSinglePageLayout(layout),
     containerStrategy: "replace",
     reportPane: "always",
+    reportFetchMode: "all",
     designSystem: PLAYGROUND_DESIGN_SYSTEM,
     labels: PLAYGROUND_LABELS,
     primitiveText: PRIMITIVE_TEXT,
@@ -47,6 +48,7 @@ export const mountWizardPlayground = (container = document.body) => {
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: PLAYGROUND_WIZARD_LAYOUTS.reports,
     designSystem: PLAYGROUND_DESIGN_SYSTEM,
+    reportFetchMode: "all",
     labels: {
       prev: "Back",
       next: "Continue",
@@ -69,6 +71,7 @@ export const mountTabsPlayground = (container = document.body) => {
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: PLAYGROUND_TABS_LAYOUTS.classic,
     designSystem: PLAYGROUND_DESIGN_SYSTEM,
+    reportFetchMode: "all",
     labels: {
       ...PLAYGROUND_LABELS,
       validating: "Validating...",
