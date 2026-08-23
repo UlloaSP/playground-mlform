@@ -57,7 +57,10 @@ const formulationPrediction = formulationView
   .reports.find((report) => report.id === "prediction");
 assert(Object.keys(formulationRequest.displayValues).length > 0, "missing formulation displayValues");
 assert("aqoat-as-hg" in formulationRequest.modelValues, "missing formulation modelValues");
-assert("material-aqoat-as-hg" in formulationRequest.fieldValues, "missing formulation fieldValues");
+assert(
+  formulationRequest.inputs.some((input) => input.fieldId === "material-aqoat-as-hg"),
+  "missing formulation input record",
+);
 assert(Array.isArray(formulationResponse.reports), "formulation reports must be an array");
 assert(
   formulationResponse.reports.some(
@@ -128,7 +131,10 @@ assert(
 );
 assert(Object.keys(playgroundRequest.displayValues).length > 0, "missing playground displayValues");
 assert("release_name" in playgroundRequest.modelValues, "missing playground modelValues");
-assert("release-name" in playgroundRequest.fieldValues, "missing playground fieldValues");
+assert(
+  playgroundRequest.inputs.some((input) => input.fieldId === "release-name"),
+  "missing playground input record",
+);
 assert(playgroundRequest.displayValues["Risk tier"] === "medium", "missing onehot display value");
 assert("Evaluation date" in playgroundRequest.displayValues, "missing date display value");
 assert("Version scores" in playgroundRequest.displayValues, "missing series display value");
@@ -139,6 +145,11 @@ assert(
 );
 assert(playgroundRequest.modelValues.risk_medium === 1, "missing selected onehot model value");
 assert(playgroundRequest.modelValues.risk_low === 0, "missing inactive onehot model value");
-assert(playgroundRequest.fieldValues["risk-tier"] === "medium", "missing onehot field value");
+assert(
+  playgroundRequest.inputs.some(
+    (input) => input.fieldId === "risk-tier" && input.value === "medium",
+  ),
+  "missing onehot input value",
+);
 
 console.log("mlform api smoke ok");

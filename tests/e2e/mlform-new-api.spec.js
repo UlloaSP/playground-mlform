@@ -94,7 +94,9 @@ test.describe("MLForm new API browser smoke", () => {
     expect(submission.lastResult.modelValues.risk_low).toBe(0);
     expect(submission.lastResult.modelValues.risk_medium).toBe(1);
     expect(submission.lastResult.modelValues.risk_high).toBe(0);
-    expect(submission.lastResult.fieldValues["risk-tier"]).toBe("medium");
+    expect(
+      submission.lastResult.inputs.find((input) => input.fieldId === "risk-tier")?.value,
+    ).toBe("medium");
     expect(submission.lastResult.displayValues["Evaluation date"]).toBeTruthy();
     expect(submission.lastResult.displayValues["Version scores"]).toBeTruthy();
     expect(submission.lastResult.reports).toHaveLength(9);
