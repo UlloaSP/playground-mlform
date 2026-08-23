@@ -18,7 +18,9 @@ export const createAggregateTransport = () => ({
       const backendReports = backends[backend.id]?.reports ?? {};
       for (const [reportKey, payload] of Object.entries(backendReports)) {
         reports.push({
-          mappedTo: `${backend.id}.${reportKey}`,
+          backend: backend.id,
+          mappedTo: reportKey,
+          status: "ready",
           payload,
         });
       }

@@ -12,7 +12,14 @@ export const createFormulationTransport = () => ({
     const prediction = buildPrediction(modelValues);
 
     return {
-      reports: [{ mappedTo: "prediction", payload: prediction }],
+      reports: [
+        {
+          backend: "default",
+          mappedTo: "prediction",
+          status: "ready",
+          payload: prediction,
+        },
+      ],
       meta: {
         generatedAt: new Date().toISOString(),
         profile: "mock-v1",

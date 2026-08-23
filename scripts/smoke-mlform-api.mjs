@@ -60,7 +60,12 @@ assert("aqoat-as-hg" in formulationRequest.modelValues, "missing formulation mod
 assert("material-aqoat-as-hg" in formulationRequest.fieldValues, "missing formulation fieldValues");
 assert(Array.isArray(formulationResponse.reports), "formulation reports must be an array");
 assert(
-  formulationResponse.reports.some((report) => report.mappedTo === "prediction"),
+  formulationResponse.reports.some(
+    (report) =>
+      report.backend === "default" &&
+      report.mappedTo === "prediction" &&
+      report.status === "ready",
+  ),
   "missing formulation prediction report",
 );
 assert(formulationPrediction?.state.status === "ready", "formulation prediction report not ready");
@@ -104,6 +109,23 @@ assert(
 );
 assert(Array.isArray(playgroundResponse.reports), "playground reports must be an array");
 assert(playgroundResponse.reports.length === 9, "playground report count mismatch");
+assert(
+  playgroundResponse.reports.every(
+    (report) =>
+      typeof report.backend === "string" &&
+      report.backend.length > 0 &&
+      typeof report.mappedTo === "string" &&
+      report.mappedTo.length > 0 &&
+      report.status === "ready" &&
+      "payload" in report,
+  ),
+  "playground reports must use explicit report result envelopes",
+);
+assert(
+  new Set(playgroundResponse.reports.map((report) => `${report.backend}:${report.mappedTo}`)).size ===
+    playgroundResponse.reports.length,
+  "playground report routes must be unique",
+);
 assert(Object.keys(playgroundRequest.displayValues).length > 0, "missing playground displayValues");
 assert("release_name" in playgroundRequest.modelValues, "missing playground modelValues");
 assert("release-name" in playgroundRequest.fieldValues, "missing playground fieldValues");
