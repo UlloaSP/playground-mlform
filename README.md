@@ -21,3 +21,5 @@ pnpm build
 ```
 
 Los reports propios se integran mediante `defineMLFormPlugin` de `mlform/view` y la opción pública `plugins` de `mountForm`/`createFormView`. `mountForm` se importa desde `mlform/kit` y `createFormView` desde `mlform/view`.
+
+M3DISEEN usa `createPrimitiveAdapter` de `mlform/kit` para mantener los campos y el report en slots estables de su interfaz propia. El nodo `custom` del layout declara qué campos gestiona el panel de materiales.
