@@ -63,6 +63,7 @@ const createShell = () => {
         class="app-menu-button"
         type="button"
         aria-label="Select demo"
+        aria-haspopup="menu"
         aria-expanded="false"
         aria-controls="demo-menu-list"
         data-role="menu-button"
@@ -71,7 +72,7 @@ const createShell = () => {
         <span></span>
         <span></span>
       </button>
-      <div class="app-menu-list" id="demo-menu-list" role="listbox" aria-label="Demo selector" data-role="menu-list"></div>
+      <div class="app-menu-list" id="demo-menu-list" role="menu" aria-label="Demo selector" data-role="menu-list" hidden></div>
     </div>
     <div class="app-frame">
       <div class="app-stage" data-role="demo-outlet"></div>
@@ -86,12 +87,13 @@ const renderMenu = (menuList, activeDemoId, onSelect) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = `app-menu-option${demo.id === activeDemoId ? " is-active" : ""}`;
-      button.setAttribute("role", "option");
-      button.setAttribute("aria-selected", String(demo.id === activeDemoId));
+      button.setAttribute("role", "menuitemradio");
+      button.setAttribute("aria-checked", String(demo.id === activeDemoId));
+      button.tabIndex = demo.id === activeDemoId ? 0 : -1;
       button.textContent = demo.label;
       button.dataset.demoId = demo.id;
-      button.addEventListener("click", () => {
-        onSelect(demo.id);
+      button.addEventListener("click", (event) => {
+        onSelect(demo.id, event.detail === 0);
       });
       return button;
     }),
@@ -122,12 +124,26 @@ export const mountDemoShell = (container = document.body) => {
   const setMenuOpen = (open) => {
     menu.classList.toggle("is-open", open);
     menuButton.setAttribute("aria-expanded", String(open));
+    menuList.hidden = !open;
   };
 
-  const mountSelectedDemo = (demoId) => {
+  const getMenuOptions = () => [...menuList.querySelectorAll(".app-menu-option")];
+
+  const focusMenuOption = (index) => {
+    const options = getMenuOptions();
+    if (options.length === 0) return;
+    const targetIndex = (index + options.length) % options.length;
+    options.forEach((option, optionIndex) => {
+      option.tabIndex = optionIndex === targetIndex ? 0 : -1;
+    });
+    options[targetIndex]?.focus();
+  };
+
+  const mountSelectedDemo = (demoId, restoreMenuFocus = false) => {
     const nextDemo = getDemoById(demoId);
     if (currentDemoId === nextDemo.id) {
       setMenuOpen(false);
+      if (restoreMenuFocus) menuButton.focus();
       return;
     }
 
@@ -144,6 +160,7 @@ export const mountDemoShell = (container = document.body) => {
 
     const mounted = nextDemo.mount(demoOutlet);
     currentUnmount = typeof mounted?.unmount === "function" ? () => mounted.unmount() : null;
+    if (restoreMenuFocus) menuButton.focus();
   };
 
   const syncFromHash = () => {
@@ -151,7 +168,35 @@ export const mountDemoShell = (container = document.body) => {
   };
 
   const handleMenuButtonClick = () => {
-    setMenuOpen(!menu.classList.contains("is-open"));
+    const open = !menu.classList.contains("is-open");
+    setMenuOpen(open);
+    if (open) {
+      const activeIndex = getMenuOptions().findIndex(
+        (option) => option.getAttribute("aria-checked") === "true",
+      );
+      focusMenuOption(Math.max(0, activeIndex));
+    }
+  };
+
+  const handleMenuButtonKeydown = (event) => {
+    if (event.key !== "ArrowDown") return;
+    event.preventDefault();
+    setMenuOpen(true);
+    focusMenuOption(0);
+  };
+
+  const handleMenuListKeydown = (event) => {
+    const options = getMenuOptions();
+    const currentIndex = options.indexOf(document.activeElement);
+    const keyTargets = {
+      ArrowDown: currentIndex + 1,
+      ArrowUp: currentIndex - 1,
+      Home: 0,
+      End: options.length - 1,
+    };
+    if (!(event.key in keyTargets)) return;
+    event.preventDefault();
+    focusMenuOption(keyTargets[event.key]);
   };
 
   const handleDocumentClick = (event) => {
@@ -161,7 +206,7 @@ export const mountDemoShell = (container = document.body) => {
   };
 
   const handleDocumentKeydown = (event) => {
-    if (event.key === "Escape") {
+    if (event.key === "Escape" && menu.classList.contains("is-open")) {
       setMenuOpen(false);
       menuButton.focus();
     }
@@ -169,6 +214,8 @@ export const mountDemoShell = (container = document.body) => {
 
   window.addEventListener("hashchange", syncFromHash);
   menuButton.addEventListener("click", handleMenuButtonClick);
+  menuButton.addEventListener("keydown", handleMenuButtonKeydown);
+  menuList.addEventListener("keydown", handleMenuListKeydown);
   document.addEventListener("click", handleDocumentClick);
   document.addEventListener("keydown", handleDocumentKeydown);
   syncFromHash();
@@ -177,6 +224,8 @@ export const mountDemoShell = (container = document.body) => {
     unmount() {
       window.removeEventListener("hashchange", syncFromHash);
       menuButton.removeEventListener("click", handleMenuButtonClick);
+      menuButton.removeEventListener("keydown", handleMenuButtonKeydown);
+      menuList.removeEventListener("keydown", handleMenuListKeydown);
       document.removeEventListener("click", handleDocumentClick);
       document.removeEventListener("keydown", handleDocumentKeydown);
       currentUnmount?.();

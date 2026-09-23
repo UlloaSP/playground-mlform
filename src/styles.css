@@ -31,6 +31,7 @@ button,
 input,
 select {
   font: inherit;
+  touch-action: manipulation;
 }
 
 #root,
@@ -40,7 +41,7 @@ body > div {
 
 .app-shell {
   min-height: 100dvh;
-  padding: 1rem;
+  padding: 4.75rem 1rem 1rem;
 }
 
 .app-menu {
@@ -82,6 +83,12 @@ body > div {
   transform: translateY(-1px);
   background: #ffffff;
   box-shadow: 0 20px 40px rgba(58, 49, 96, 0.3);
+}
+
+.app-menu-button:focus-visible,
+.app-menu-option:focus-visible {
+  outline: 3px solid #332d59;
+  outline-offset: 3px;
 }
 
 .app-menu-list {
@@ -150,7 +157,7 @@ body > div {
 
 .app-shell.is-fixed-layout .app-frame,
 .app-shell.is-fixed-layout .app-stage {
-  height: calc(100dvh - 2rem);
+  height: calc(100dvh - 5.75rem);
   min-height: 0;
   overflow: hidden;
 }
@@ -163,15 +170,26 @@ body > div {
 
 @media (max-width: 900px) {
   .app-shell {
-    padding: 0.7rem;
+    padding: 4.35rem 0.7rem 0.7rem;
   }
 
   .app-shell.is-fixed-layout .app-frame,
   .app-shell.is-fixed-layout .app-stage {
-    height: calc(100dvh - 1.4rem);
+    height: calc(100dvh - 5.05rem);
   }
 
   .app-stage {
     min-height: 640px;
+  }
+}
+
+.app-menu-list[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-menu-button,
+  .app-menu-list {
+    transition: none;
   }
 }

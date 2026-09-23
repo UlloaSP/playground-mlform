@@ -103,10 +103,19 @@
   color: #fff;
 }
 
-.fd-host-field select:focus,
-.fd-host-button:focus {
-  outline: 3px solid rgba(121, 119, 193, 0.22);
-  outline-offset: 2px;
+.fd-top-toggle:focus-visible,
+.fd-host-field select:focus-visible,
+.fd-host-button:focus-visible,
+.fd-submit-button:focus-visible,
+.fd-material-add:focus-visible,
+.fd-material-danger:focus-visible,
+.fd-material-remove:focus-visible,
+.fd-material-label select:focus-visible,
+.fd-material-label input:focus-visible,
+.fd-material-mini input:focus-visible,
+.fd-material-range:focus-visible {
+  outline: 3px solid #46418f;
+  outline-offset: 3px;
 }
 
 .fd-form-shell {
@@ -243,5 +252,11 @@
 
   .fd-form-status {
     text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-top-caret {
+    transition: none;
   }
 }

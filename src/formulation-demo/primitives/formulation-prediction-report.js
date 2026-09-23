@@ -127,19 +127,19 @@ class FormulationPredictionReportElement extends HTMLElement {
                   <div class="table">
                     <div class="row">
                       <span>Mechanical characteristics</span>
-                      <strong class="${summary ? "good" : ""}">${escapeHtml(summary?.mechanicalCharacteristics ?? "...")}</strong>
+                      <strong class="${summary ? "good" : ""}">${escapeHtml(summary?.mechanicalCharacteristics ?? "…")}</strong>
                     </div>
                     <div class="row">
                       <span>Extrusion temperature</span>
-                      <strong>${summary ? `${escapeHtml(summary.extrusionTemperature)} °C` : "..."}</strong>
+                      <strong>${summary ? `${escapeHtml(summary.extrusionTemperature)} °C` : "…"}</strong>
                     </div>
                     <div class="row">
                       <span>Printability</span>
-                      <strong class="${summary?.printability === "No" ? "bad" : summary ? "good" : ""}">${escapeHtml(summary?.printability ?? "...")}</strong>
+                      <strong class="${summary?.printability === "No" ? "bad" : summary ? "good" : ""}">${escapeHtml(summary?.printability ?? "…")}</strong>
                     </div>
                     <div class="row">
                       <span>Printing temperature</span>
-                      <strong>${summary ? `${escapeHtml(summary.printingTemperature)} °C` : "..."}</strong>
+                      <strong>${summary ? `${escapeHtml(summary.printingTemperature)} °C` : "…"}</strong>
                     </div>
                   </div>
                   ${this.#renderChart(curve)}
