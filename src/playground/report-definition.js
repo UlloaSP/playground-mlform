@@ -1,4 +1,4 @@
-import { createMlRegistryPack } from "mlform/builtins";
+import { defineMLFormPlugin } from "mlform/view";
 import { createBuiltinPrimitiveRegistry } from "mlform/primitives";
 import { defineReportDefinition } from "mlform/schema";
 import { z } from "zod";
@@ -113,12 +113,18 @@ const backendCompareReportPresenter = {
   },
 };
 
-export const createAppRegistryPack = () => {
-  const pack = createMlRegistryPack();
-  pack.registry.registerReport(backendCompareReportDefinition);
-  pack.descriptorRegistry.registerReport(backendCompareReportPresenter);
-  return pack;
+const backendCompareReportKind = {
+  category: "report",
+  kind: backendCompareReportDefinition.kind,
+  register(registry, descriptorRegistry) {
+    registry.registerReport(backendCompareReportDefinition);
+    descriptorRegistry.registerReport(backendCompareReportPresenter);
+  },
 };
+
+export const BACKEND_COMPARE_PLUGIN = defineMLFormPlugin({
+  reports: [backendCompareReportKind],
+});
 
 export const createAppPrimitiveRegistry = () =>
   createBuiltinPrimitiveRegistry().registerReport(

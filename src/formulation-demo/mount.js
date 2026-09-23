@@ -1,14 +1,12 @@
-import { createFormView, defaultKitLabels } from "mlform/kit";
+import { createPrimitiveAdapter, defaultKitLabels } from "mlform/kit";
+import { createFormView } from "mlform/view";
 import { primitiveStaticText } from "mlform/primitives";
 import { FORMULATION_EXAMPLES, getExampleById } from "./examples.js";
 import { MATERIAL_CATALOG, getMaterialFieldId, getMaterialOptionLabel } from "./material-catalog.js";
 import { createFormulationPrimitiveRegistry } from "./primitive-registry.js";
-import { createFormulationRegistryPack } from "./registry.js";
+import { FORMULATION_PLUGIN } from "./registry.js";
 import { createFormulationSchema } from "./schema.js";
 import { createFormulationTransport } from "./transport.js";
-
-const FIELD_FRAME_TAG = "mlf-field-frame";
-const REPORT_FRAME_TAG = "mlf-report-frame";
 
 const PRIMITIVE_TEXT = {
   ...primitiveStaticText,
@@ -17,7 +15,8 @@ const PRIMITIVE_TEXT = {
   reportsEmptyTitle: "Prediction pending",
   reportsEmptyBody: "Complete formulation and submit to generate prediction.",
   formErrorsTitle: "Validation issues",
-  formStatusLabel: (status) => status.toUpperCase(),
+  formStateLabel: (operation, submissionStatus) =>
+    primitiveStaticText.formStateLabel(operation, submissionStatus).toUpperCase(),
   reportStatusLabel: (status) => status.toUpperCase(),
   categoryPlaceholder: "Select an option",
 };
@@ -25,8 +24,8 @@ const PRIMITIVE_TEXT = {
 const FORM_LABELS = {
   ...defaultKitLabels,
   submit: "Complete Prediction",
-  validating: "Validating...",
-  submitting: "Running prediction...",
+  validating: "Validating…",
+  submitting: "Running prediction…",
 };
 
 const escapeHtml = (value) =>
@@ -55,7 +54,7 @@ const createShell = () => {
   page.innerHTML = `
     <div class="fd-page">
       <section class="fd-card fd-top-card">
-        <button class="fd-top-toggle" type="button" aria-expanded="true">
+        <button class="fd-top-toggle" type="button" aria-label="Toggle example loader" aria-expanded="true">
           <div>
             <h1>Load an example</h1>
             <p>Select an example</p>
@@ -66,11 +65,10 @@ const createShell = () => {
           <div class="fd-top-form">
             <label class="fd-host-field">
               <span>Select an example</span>
-              <select data-role="example-select"></select>
+              <select name="example" autocomplete="off" data-role="example-select"></select>
             </label>
             <button class="fd-host-button" type="button" data-role="load-example">
               Load materials
-              <span aria-hidden="true">⚗</span>
             </button>
           </div>
         </div>
@@ -118,7 +116,7 @@ const createLayout = () => ({
   kind: "stacked",
   children: [
     {
-      kind: "section",
+      kind: "group",
       id: "form-column",
       children: [
         {
@@ -126,10 +124,7 @@ const createLayout = () => ({
           id: "materials-section",
           title: "Materials",
           description: "Model uses all possible materials. Every material starts at 0 and total must sum 100% w/w.",
-          children: MATERIAL_CATALOG.map((material) => ({
-            kind: "field",
-            field: getMaterialFieldId(material.id),
-          })),
+          children: [{ kind: "custom", id: "materials", fields: MATERIAL_FIELD_IDS }],
         },
         {
           kind: "section",
@@ -169,13 +164,10 @@ const createLayout = () => ({
 });
 
 const createView = (initialValues) => {
-  const pack = createFormulationRegistryPack();
   return createFormView({
     schema: createFormulationSchema(),
     transport: createFormulationTransport(),
-    registry: pack.registry,
-    descriptorRegistry: pack.descriptorRegistry,
-    behaviors: pack.behaviors,
+    plugins: [FORMULATION_PLUGIN],
     initialValues,
     validators: createValidators(),
     layout: createLayout(),
@@ -183,65 +175,38 @@ const createView = (initialValues) => {
   });
 };
 
-const resolveReportDescriptor = (report) => {
-  if (report.descriptor) {
-    return report.descriptor;
-  }
+const renderMaterialOptions = (materials) =>
+  materials.length === 0
+    ? '<option value="">No more materials</option>'
+    : materials
+        .map(
+          (material) =>
+            `<option value="${escapeHtml(material.id)}">${escapeHtml(getMaterialOptionLabel(material.id))}</option>`,
+        )
+        .join("");
 
-  if (report.kind === "formulation-prediction") {
-    return {
-      component: "formulation-prediction-report",
-      props: {
-        id: report.id,
-        kind: report.kind,
-        label: report.config.label ?? "Prediction",
-        description: report.config.description ?? "",
-        payload: report.state.payload,
-        error: report.state.error,
-        state: report.state.status,
-      },
-    };
-  }
-
-  return null;
-};
-
-const renderFieldFrame = (field, registry) => {
-  const element = document.createElement(FIELD_FRAME_TAG);
-  element.controller = field.controller;
-  element.descriptor = field.descriptor;
-  element.registry = registry;
-  element.text = PRIMITIVE_TEXT;
-  return element;
-};
-
-const renderReportFrame = (report, registry, lastResult) => {
-  const descriptor = resolveReportDescriptor(report);
-
-  if (!descriptor) {
-    const fallback = document.createElement("pre");
-    fallback.className = "fd-report-debug";
-    fallback.textContent = JSON.stringify(
-      {
-        id: report.id,
-        kind: report.kind,
-        state: report.state,
-        descriptor: report.descriptor,
-      },
-      null,
-      2,
-    );
-    return fallback;
-  }
-
-  const element = document.createElement(REPORT_FRAME_TAG);
-  element.controller = report.controller;
-  element.descriptor = descriptor;
-  element.registry = registry;
-  element.text = PRIMITIVE_TEXT;
-  element.lastResult = lastResult;
-  return element;
-};
+const renderMaterialRows = (materials) =>
+  materials.length === 0
+    ? '<div class="fd-material-empty">All materials currently at 0% w/w.</div>'
+    : materials
+        .map(
+          (material) => `
+            <article class="fd-material-row" data-material-id="${escapeHtml(material.id)}">
+              <div class="fd-material-top">
+                <div class="fd-material-name">${escapeHtml(getMaterialOptionLabel(material.id))}</div>
+                <button class="fd-material-remove" type="button" aria-label="Remove ${escapeHtml(getMaterialOptionLabel(material.id))}" data-role="remove-material" data-material-id="${escapeHtml(material.id)}">Remove</button>
+              </div>
+              <div class="fd-material-controls">
+                <input class="fd-material-range" aria-label="${escapeHtml(getMaterialOptionLabel(material.id))} proportion" name="${escapeHtml(material.id)}-range" type="range" min="0" max="100" step="1" value="${escapeHtml(material.value)}" data-role="material-range" data-material-id="${escapeHtml(material.id)}" />
+                <div class="fd-material-mini">
+                  <input aria-label="${escapeHtml(getMaterialOptionLabel(material.id))} percentage" name="${escapeHtml(material.id)}-percentage" autocomplete="off" type="number" min="0" max="100" step="1" value="${escapeHtml(material.value)}" data-role="material-number" data-material-id="${escapeHtml(material.id)}" />
+                  <span>% w/w</span>
+                </div>
+              </div>
+            </article>
+          `,
+        )
+        .join("");
 
 const createMaterialsPanel = (snapshot, view) => {
   const panel = document.createElement("section");
@@ -252,7 +217,6 @@ const createMaterialsPanel = (snapshot, view) => {
   const availableMaterials = MATERIAL_CATALOG.filter(
     (material) => !activeMaterials.some((entry) => entry.id === material.id),
   );
-  const firstAvailable = availableMaterials[0];
   const total = getMaterialTotal(values);
   const totalClass =
     Math.abs(total - 100) < 0.001 ? "good" : total > 100 ? "bad" : "warn";
@@ -281,7 +245,8 @@ const createMaterialsPanel = (snapshot, view) => {
       .fd-material-row{display:grid;gap:.8rem;padding:.9rem;border-radius:.8rem;border:1px solid color-mix(in srgb,var(--mlf-color-border,#d9dce7) 88%,transparent)}
       .fd-material-top{display:flex;align-items:center;justify-content:space-between;gap:.7rem}
       .fd-material-name{flex:1;text-align:center;color:var(--mlf-color-text,#2c2847)}
-      .fd-material-remove{border:0;background:transparent;cursor:pointer}
+      .fd-material-remove{border:0;border-radius:.35rem;background:transparent;color:#5f5a87;cursor:pointer;font-size:.78rem;padding:.35rem .45rem}
+      .fd-material-remove:hover{background:rgba(95,90,135,.1);color:#2c2847}
       .fd-material-controls{display:grid;gap:.9rem;align-items:center;grid-template-columns:1fr 112px}
       .fd-material-range{width:100%;accent-color:#8f8cd2}
       .fd-material-mini{display:grid;justify-items:center;gap:.3rem}
@@ -297,23 +262,13 @@ const createMaterialsPanel = (snapshot, view) => {
         <div class="fd-material-grid">
           <label class="fd-material-label">
             <span>Select a material</span>
-            <select data-role="material-select">
-              ${
-                availableMaterials.length === 0
-                  ? '<option value="">No more materials</option>'
-                  : availableMaterials
-                      .map(
-                        (material) => `<option value="${escapeHtml(material.id)}"${
-                          material.id === firstAvailable?.id ? " selected" : ""
-                        }>${escapeHtml(getMaterialOptionLabel(material.id))}</option>`,
-                      )
-                      .join("")
-              }
+              <select name="material" autocomplete="off" data-role="material-select">
+              ${renderMaterialOptions(availableMaterials)}
             </select>
           </label>
           <label class="fd-material-label">
             <span>Proportion (w/w)</span>
-            <input data-role="draft-proportion" type="number" min="0" max="100" step="1" value="0" />
+            <input aria-label="Draft material proportion" name="draft-proportion" autocomplete="off" data-role="draft-proportion" type="number" min="0" max="100" step="1" value="0" />
           </label>
         </div>
         <button class="fd-material-add" type="button" data-role="add-material"${
@@ -330,29 +285,7 @@ const createMaterialsPanel = (snapshot, view) => {
           }>Remove All</button>
         </div>
         <div class="fd-material-list">
-          ${
-            activeMaterials.length === 0
-              ? '<div class="fd-material-empty">All materials currently at 0% w/w.</div>'
-              : activeMaterials
-                  .map(
-                    (material) => `
-                      <article class="fd-material-row">
-                        <div class="fd-material-top">
-                          <div class="fd-material-name">${escapeHtml(getMaterialOptionLabel(material.id))}</div>
-                          <button class="fd-material-remove" type="button" data-role="remove-material" data-material-id="${escapeHtml(material.id)}">🗑</button>
-                        </div>
-                        <div class="fd-material-controls">
-                          <input class="fd-material-range" type="range" min="0" max="100" step="1" value="${escapeHtml(material.value)}" data-role="material-range" data-material-id="${escapeHtml(material.id)}" />
-                          <div class="fd-material-mini">
-                            <input type="number" min="0" max="100" step="1" value="${escapeHtml(material.value)}" data-role="material-number" data-material-id="${escapeHtml(material.id)}" />
-                            <span>% w/w</span>
-                          </div>
-                        </div>
-                      </article>
-                    `,
-                  )
-                  .join("")
-          }
+          ${renderMaterialRows(activeMaterials)}
         </div>
       </section>
     </div>
@@ -382,40 +315,67 @@ const createMaterialsPanel = (snapshot, view) => {
     view.submit();
   });
 
-  panel.querySelectorAll('[data-role="remove-material"]').forEach((button) => {
-    button.addEventListener("click", () => {
-      setMaterialValue(button.getAttribute("data-material-id"), 0);
-    });
+  panel.addEventListener("click", (event) => {
+    const target = event.target instanceof Element
+      ? event.target.closest('[data-role="remove-material"]')
+      : null;
+    if (target) setMaterialValue(target.dataset.materialId, 0);
+  });
+  panel.addEventListener("input", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    if (target.dataset.role === "material-range" || target.dataset.role === "material-number") {
+      setMaterialValue(target.dataset.materialId, target.value);
+    }
   });
 
-  panel.querySelectorAll('[data-role="material-range"]').forEach((input) => {
-    input.addEventListener("input", (event) => {
-      setMaterialValue(input.getAttribute("data-material-id"), event.target.value);
-    });
-  });
-
-  panel.querySelectorAll('[data-role="material-number"]').forEach((input) => {
-    input.addEventListener("input", (event) => {
-      setMaterialValue(input.getAttribute("data-material-id"), event.target.value);
-    });
-  });
-
-  const inlineSubmit = panel.querySelector('[data-role="submit-inline"]');
-  if (inlineSubmit instanceof HTMLButtonElement) {
-    const status = snapshot.form.status;
-    inlineSubmit.disabled = status === "validating" || status === "submitting";
+  let activeIds = activeMaterials.map((material) => material.id).join("|");
+  const sync = (nextSnapshot) => {
+    const nextActive = getActiveMaterials(nextSnapshot.form.values);
+    const nextIds = nextActive.map((material) => material.id).join("|");
+    const list = panel.querySelector(".fd-material-list");
+    if (nextIds !== activeIds) {
+      activeIds = nextIds;
+      list.innerHTML = renderMaterialRows(nextActive);
+      const available = MATERIAL_CATALOG.filter(
+        (material) => !nextActive.some((entry) => entry.id === material.id),
+      );
+      const select = panel.querySelector('[data-role="material-select"]');
+      select.innerHTML = renderMaterialOptions(available);
+      panel.querySelector('[data-role="add-material"]').disabled = available.length === 0;
+    } else {
+      for (const material of nextActive) {
+        const row = Array.from(list.querySelectorAll("[data-material-id]")).find(
+          (entry) => entry.classList.contains("fd-material-row") && entry.dataset.materialId === material.id,
+        );
+        row?.querySelectorAll("input").forEach((input) => {
+          if (input !== panel.ownerDocument.activeElement) input.value = String(material.value);
+        });
+      }
+    }
+    const nextTotal = getMaterialTotal(nextSnapshot.form.values);
+    const badge = panel.querySelector(".fd-material-badge");
+    badge.className = `fd-material-badge ${Math.abs(nextTotal - 100) < 0.001 ? "good" : nextTotal > 100 ? "bad" : "warn"}`;
+    badge.textContent = `Current % (w/w): ${nextTotal.toFixed(2)}`;
+    panel.querySelector('[data-role="remove-all"]').disabled = nextActive.length === 0;
+    const operation = nextSnapshot.form.operation;
+    const inlineSubmit = panel.querySelector('[data-role="submit-inline"]');
+    inlineSubmit.disabled =
+      nextSnapshot.form.lifecycle !== "active" ||
+      operation === "validating" ||
+      operation === "submitting";
     inlineSubmit.textContent =
-      status === "validating"
+      operation === "validating"
         ? FORM_LABELS.validating
-        : status === "submitting"
+        : operation === "submitting"
           ? FORM_LABELS.submitting
           : FORM_LABELS.submit;
-  }
-
-  return panel;
+  };
+  sync(snapshot);
+  return { element: panel, sync };
 };
 
-const renderNode = (node, snapshot, view, primitiveRegistry, reportRefs) => {
+const renderNode = (node, snapshot, view, ui, materialSyncs) => {
   if (node.kind === "section") {
     const section = document.createElement("section");
     section.className = "fd-layout-section";
@@ -445,13 +405,9 @@ const renderNode = (node, snapshot, view, primitiveRegistry, reportRefs) => {
     const children = document.createElement("div");
     children.className = "fd-layout-children";
 
-    if (node.id === "materials-section") {
-      children.append(createMaterialsPanel(snapshot, view));
-    } else {
-      node.children.forEach((child) => {
-        children.append(renderNode(child, snapshot, view, primitiveRegistry, reportRefs));
-      });
-    }
+    node.children.forEach((child) => {
+      children.append(renderNode(child, snapshot, view, ui, materialSyncs));
+    });
 
     section.append(children);
     return section;
@@ -462,99 +418,93 @@ const renderNode = (node, snapshot, view, primitiveRegistry, reportRefs) => {
     group.className = `fd-layout-group${node.columns ? ` fd-columns-${node.columns}` : ""}`;
     group.dataset.groupId = node.id;
     node.children.forEach((child) => {
-      group.append(renderNode(child, snapshot, view, primitiveRegistry, reportRefs));
+      group.append(renderNode(child, snapshot, view, ui, materialSyncs));
     });
     return group;
   }
 
   if (node.kind === "field") {
-    const field = snapshot.fields.find((entry) => entry.id === node.field);
-    return field ? renderFieldFrame(field, primitiveRegistry) : document.createElement("div");
+    const slot = document.createElement("div");
+    slot.className = "fd-control-slot";
+    ui.mountField(slot, node.field);
+    return slot;
   }
 
   if (node.kind === "report") {
-    const report = snapshot.reports.find((entry) => entry.id === node.report);
-    const element = report
-      ? renderReportFrame(report, primitiveRegistry, snapshot.form.lastResult)
-      : document.createElement("div");
-    if (report) {
-      reportRefs.push(element);
-    }
-    return element;
+    const slot = document.createElement("div");
+    slot.className = "fd-control-slot";
+    ui.mountReport(slot, node.report);
+    return slot;
   }
 
-  return document.createElement("div");
+  if (node.kind === "custom" && node.id === "materials") {
+    const panel = createMaterialsPanel(snapshot, view);
+    materialSyncs.push(panel.sync);
+    return panel.element;
+  }
+
+  throw new TypeError(`Unknown layout node "${node.kind}".`);
 };
 
 const createViewShell = (view, host, primitiveRegistry) => {
-  const render = (snapshot) => {
-    const reportRefs = [];
-    const root = document.createElement("div");
-    root.className = "fd-layout-root";
-
+  const ui = createPrimitiveAdapter(view, { primitiveRegistry, primitiveText: PRIMITIVE_TEXT });
+  const snapshot = view.getSnapshot();
+  const materialSyncs = [];
+  const root = document.createElement("div");
+  root.className = "fd-layout-root";
+  try {
     snapshot.layout.children.forEach((node) => {
-      root.append(renderNode(node, snapshot, view, primitiveRegistry, reportRefs));
+      root.append(renderNode(node, snapshot, view, ui, materialSyncs));
     });
+  } catch (error) {
+    ui.dispose();
+    throw error;
+  }
 
-    const formColumn = root.querySelector('[data-section-id="form-column"] > .fd-layout-children');
-    if (formColumn instanceof HTMLElement) {
-      const errors = document.createElement("div");
-      errors.className = "fd-form-errors";
-      errors.dataset.role = "form-errors";
+  const formColumn = root.querySelector('[data-group-id="form-column"]');
+  const errors = document.createElement("div");
+  errors.className = "fd-form-errors";
+  errors.setAttribute("role", "alert");
+  errors.dataset.role = "form-errors";
+  const actions = document.createElement("div");
+  actions.className = "fd-form-actions";
+  actions.innerHTML = `
+    <div class="fd-form-status" data-role="form-status" aria-live="polite"></div>
+    <button class="fd-submit-button" type="button" data-role="submit-button"></button>
+  `;
+  formColumn?.append(errors, actions);
+  host.replaceChildren(root);
 
-      const formErrors = snapshot.form.errors.form ?? [];
-      if (formErrors.length === 0) {
-        errors.hidden = true;
-      } else {
-        errors.replaceChildren(
-          ...formErrors.map((message) => {
-            const item = document.createElement("p");
-            item.textContent = message;
-            return item;
-          }),
-        );
-      }
-
-      const actions = document.createElement("div");
-      actions.className = "fd-form-actions";
-      actions.innerHTML = `
-        <div class="fd-form-status" data-role="form-status"></div>
-        <button class="fd-submit-button" type="button" data-role="submit-button"></button>
-      `;
-
-      formColumn.append(errors, actions);
-    }
-
-    host.replaceChildren(root);
-
-    reportRefs.forEach((reportElement) => {
-      reportElement.lastResult = snapshot.form.lastResult;
-    });
-
-    const submitButton = host.querySelector('[data-role="submit-button"]');
-    if (submitButton instanceof HTMLButtonElement) {
-      const status = snapshot.form.status;
-      submitButton.disabled = status === "validating" || status === "submitting";
-      submitButton.textContent =
-        status === "validating"
-          ? FORM_LABELS.validating
-          : status === "submitting"
-            ? FORM_LABELS.submitting
-            : FORM_LABELS.submit;
-      submitButton.addEventListener("click", () => {
-        view.submit();
-      });
-    }
-
-    const statusNode = host.querySelector('[data-role="form-status"]');
-    if (statusNode instanceof HTMLElement) {
-      const total = getMaterialTotal(snapshot.form.values);
-      statusNode.textContent = `Status ${PRIMITIVE_TEXT.formStatusLabel(snapshot.form.status)} | Total ${total.toFixed(2)}/100`;
-    }
+  const submitButton = actions.querySelector('[data-role="submit-button"]');
+  submitButton?.addEventListener("click", () => view.submit());
+  const statusNode = actions.querySelector('[data-role="form-status"]');
+  const sync = (nextSnapshot) => {
+    materialSyncs.forEach((update) => update(nextSnapshot));
+    const formErrors = nextSnapshot.form.errors.form ?? [];
+    errors.hidden = formErrors.length === 0;
+    errors.replaceChildren(
+      ...formErrors.map((message) => {
+        const item = document.createElement("p");
+        item.textContent = message;
+        return item;
+      }),
+    );
+    const operation = nextSnapshot.form.operation;
+    submitButton.disabled =
+      nextSnapshot.form.lifecycle !== "active" ||
+      operation === "validating" ||
+      operation === "submitting";
+    submitButton.textContent =
+      operation === "validating"
+        ? FORM_LABELS.validating
+        : operation === "submitting"
+          ? FORM_LABELS.submitting
+          : FORM_LABELS.submit;
+    const total = getMaterialTotal(nextSnapshot.form.values);
+    statusNode.textContent = `Status ${PRIMITIVE_TEXT.formStateLabel(operation, nextSnapshot.form.submissionStatus)} | Total ${total.toFixed(2)}/100`;
   };
-
-  render(view.getSnapshot());
-  return { sync: render };
+  sync(snapshot);
+  return { sync, dispose: () => ui.dispose() };
 };
 
 export const mountFormulationDemo = (container = document.body) => {
@@ -586,6 +536,8 @@ export const mountFormulationDemo = (container = document.body) => {
 
   const mountView = (initialValues) => {
     unsubscribe();
+    rendered?.dispose();
+    view?.dispose();
     view = createView(initialValues);
     rendered = createViewShell(view, formHost, primitiveRegistry);
     unsubscribe = view.subscribe((snapshot) => {
@@ -619,6 +571,8 @@ export const mountFormulationDemo = (container = document.body) => {
   return {
     unmount() {
       unsubscribe();
+      rendered?.dispose();
+      view?.dispose();
       shell.remove();
     },
   };

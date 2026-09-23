@@ -23,16 +23,15 @@ const assert = (condition, message) => {
   }
 };
 
-const { createFormView } = await import("mlform/kit");
-const { createFormulationRegistryPack } = await import("../src/formulation-demo/registry.js");
+const { createFormView } = await import("mlform/view");
+const { FORMULATION_PLUGIN } = await import("../src/formulation-demo/registry.js");
 const { createFormulationSchema } = await import("../src/formulation-demo/schema.js");
 const { createFormulationTransport } = await import("../src/formulation-demo/transport.js");
 const { FORM_SCHEMA } = await import("../src/playground/schema.js");
 const { PLAYGROUND_SECTIONED_LAYOUT } = await import("../src/playground/section-layouts.js");
 const { createAggregateTransport } = await import("../src/playground/transport.js");
-const { createAppRegistryPack } = await import("../src/playground/report-definition.js");
+const { BACKEND_COMPARE_PLUGIN } = await import("../src/playground/report-definition.js");
 
-const formulationPack = createFormulationRegistryPack();
 const formulationSchema = createFormulationSchema();
 const formulationTransport = createFormulationTransport();
 let formulationRequest;
@@ -46,12 +45,16 @@ const formulationView = createFormView({
       return formulationResponse;
     },
   },
-  registry: formulationPack.registry,
-  descriptorRegistry: formulationPack.descriptorRegistry,
-  behaviors: formulationPack.behaviors,
+  plugins: [FORMULATION_PLUGIN],
   reportFetchMode: "all",
 });
 await formulationView.submitPipeline();
+assert(formulationView.form.state.lifecycle === "active", "formulation view is not active");
+assert(formulationView.form.state.operation === "idle", "formulation operation did not settle");
+assert(
+  formulationView.form.state.submissionStatus === "succeeded",
+  "formulation submission did not succeed",
+);
 const formulationPrediction = formulationView
   .getSnapshot()
   .reports.find((report) => report.id === "prediction");
@@ -77,7 +80,6 @@ assert(
   "formulation prediction payload missing",
 );
 
-const playgroundPack = createAppRegistryPack();
 const aggregateTransport = createAggregateTransport();
 let playgroundRequest;
 let playgroundResponse;
@@ -90,13 +92,17 @@ const playgroundView = createFormView({
       return playgroundResponse;
     },
   },
-  registry: playgroundPack.registry,
-  descriptorRegistry: playgroundPack.descriptorRegistry,
-  behaviors: playgroundPack.behaviors,
+  plugins: [BACKEND_COMPARE_PLUGIN],
   layout: PLAYGROUND_SECTIONED_LAYOUT,
   reportFetchMode: "all",
 });
 await playgroundView.submitPipeline();
+assert(playgroundView.form.state.lifecycle === "active", "playground view is not active");
+assert(playgroundView.form.state.operation === "idle", "playground operation did not settle");
+assert(
+  playgroundView.form.state.submissionStatus === "succeeded",
+  "playground submission did not succeed",
+);
 
 const playgroundReports = playgroundView.getSnapshot().reports;
 const backendCompare = playgroundReports.find((report) => report.id === "backend-compare");
@@ -151,5 +157,10 @@ assert(
   ),
   "missing onehot input value",
 );
+
+formulationView.dispose();
+playgroundView.dispose();
+assert(formulationView.form.state.lifecycle === "disposed", "formulation view was not disposed");
+assert(playgroundView.form.state.lifecycle === "disposed", "playground view was not disposed");
 
 console.log("mlform api smoke ok");

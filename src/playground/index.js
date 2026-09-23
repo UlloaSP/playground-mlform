@@ -1,5 +1,5 @@
 import { mountForm } from "mlform/kit";
-import { createAppPrimitiveRegistry, createAppRegistryPack } from "./report-definition.js";
+import { BACKEND_COMPARE_PLUGIN, createAppPrimitiveRegistry } from "./report-definition.js";
 import { PLAYGROUND_DESIGN_SYSTEM, PLAYGROUND_LABELS, PRIMITIVE_TEXT } from "./config.js";
 import { FIELD_COMBINATIONS_SCHEMA } from "./field-combinations-schema.js";
 import { FORM_SCHEMA } from "./schema.js";
@@ -16,13 +16,10 @@ export const mountPlayground = (
   layout = "stacked",
   schema = FORM_SCHEMA,
 ) => {
-  const pack = createAppRegistryPack();
   return mountForm(container, {
     schema,
     transport: createAggregateTransport(),
-    registry: pack.registry,
-    descriptorRegistry: pack.descriptorRegistry,
-    behaviors: pack.behaviors,
+    plugins: [BACKEND_COMPARE_PLUGIN],
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: normalizeSinglePageLayout(layout),
     containerStrategy: "replace",
@@ -38,13 +35,10 @@ export const mountFieldCombinationsPlayground = (container = document.body) =>
   mountPlayground(container, "split", FIELD_COMBINATIONS_SCHEMA);
 
 export const mountWizardPlayground = (container = document.body) => {
-  const pack = createAppRegistryPack();
   return mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createAggregateTransport(),
-    registry: pack.registry,
-    descriptorRegistry: pack.descriptorRegistry,
-    behaviors: pack.behaviors,
+    plugins: [BACKEND_COMPARE_PLUGIN],
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: PLAYGROUND_WIZARD_LAYOUTS.reports,
     designSystem: PLAYGROUND_DESIGN_SYSTEM,
@@ -53,29 +47,26 @@ export const mountWizardPlayground = (container = document.body) => {
       prev: "Back",
       next: "Continue",
       submit: PLAYGROUND_LABELS.submit,
-      validating: "Validating...",
-      submitting: "Running backend comparison...",
+      validating: "Validating…",
+      submitting: "Running backend comparison…",
     },
     primitiveText: PRIMITIVE_TEXT,
   });
 };
 
 export const mountTabsPlayground = (container = document.body) => {
-  const pack = createAppRegistryPack();
   return mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createAggregateTransport(),
-    registry: pack.registry,
-    descriptorRegistry: pack.descriptorRegistry,
-    behaviors: pack.behaviors,
+    plugins: [BACKEND_COMPARE_PLUGIN],
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: PLAYGROUND_TABS_LAYOUTS.classic,
     designSystem: PLAYGROUND_DESIGN_SYSTEM,
     reportFetchMode: "all",
     labels: {
       ...PLAYGROUND_LABELS,
-      validating: "Validating...",
-      submitting: "Running backend comparison...",
+      validating: "Validating…",
+      submitting: "Running backend comparison…",
     },
     primitiveText: PRIMITIVE_TEXT,
   });

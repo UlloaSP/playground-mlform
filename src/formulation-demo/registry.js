@@ -1,4 +1,4 @@
-import { createMlRegistryPack } from "mlform/builtins";
+import { defineMLFormPlugin } from "mlform/view";
 import { defineReportDefinition, resolveMappedReportPayload } from "mlform/schema";
 import { z } from "zod";
 
@@ -29,10 +29,6 @@ const formulationPredictionReportDefinition = defineReportDefinition({
 const formulationPredictionReportPresenter = {
   kind: "formulation-prediction",
   describe(config, context) {
-    if (context.state.status === "idle" && context.payload === undefined) {
-      return null;
-    }
-
     return {
       component: "formulation-prediction-report",
       props: {
@@ -48,9 +44,15 @@ const formulationPredictionReportPresenter = {
   },
 };
 
-export const createFormulationRegistryPack = () => {
-  const pack = createMlRegistryPack();
-  pack.registry.registerReport(formulationPredictionReportDefinition);
-  pack.descriptorRegistry.registerReport(formulationPredictionReportPresenter);
-  return pack;
+const formulationPredictionReportKind = {
+  category: "report",
+  kind: formulationPredictionReportDefinition.kind,
+  register(registry, descriptorRegistry) {
+    registry.registerReport(formulationPredictionReportDefinition);
+    descriptorRegistry.registerReport(formulationPredictionReportPresenter);
+  },
 };
+
+export const FORMULATION_PLUGIN = defineMLFormPlugin({
+  reports: [formulationPredictionReportKind],
+});

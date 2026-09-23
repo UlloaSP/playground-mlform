@@ -33,13 +33,42 @@ test.describe("MLForm new API browser smoke", () => {
       await expect(page.getByText(expectedText).first()).toBeVisible();
       await expect(page.locator("body")).not.toContainText("RegistryError");
       await expect(page.locator("body")).not.toContainText("Unknown field kind");
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      ).toBe(true);
       expect(errors).toEqual([]);
     });
   }
 
+  test("demo menu supports keyboard navigation", async ({ page }) => {
+    await page.goto("/#formulation-kit");
+    const menuButton = page.getByRole("button", { name: "Select demo" });
+    const menu = page.getByRole("menu", { name: "Demo selector" });
+
+    await expect(menu).toBeHidden();
+    await menuButton.focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(menu).toBeVisible();
+    await expect(page.getByRole("menuitemradio", { name: "M3DISEEN" })).toBeFocused();
+
+    await page.keyboard.press("End");
+    await expect(page.getByRole("menuitemradio", { name: "Tabs" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(menuButton).toBeFocused();
+
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("End");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/#tabs-classic$/);
+    await expect(menu).toBeHidden();
+    await expect(menuButton).toBeFocused();
+  });
+
   test("formulation renders its mapped prediction report", async ({ page }) => {
     const errors = pageErrors(page);
     await page.goto("/#formulation-kit");
+    await expect(page.getByText("Awaiting submission")).toBeVisible();
     await clickSubmit(page, "Complete Prediction");
 
     await expect(page.locator("mlf-formulation-prediction-report")).toBeVisible();
@@ -47,6 +76,22 @@ test.describe("MLForm new API browser smoke", () => {
     await expect(page.getByText("Dissolution over time")).toBeVisible();
 
     expect(errors).toEqual([]);
+  });
+
+  test("formulation keeps material inputs and primitive frames mounted while values change", async ({ page }) => {
+    await page.goto("/#formulation-kit");
+    const number = page.locator('[data-role="material-number"]').first();
+    await expect(number).toBeVisible();
+    await number.evaluate((input) => {
+      window.materialInputBefore = input;
+      window.speedFrameBefore = document.querySelector('mlf-field-frame[data-field-id="extrusionspeed"]');
+    });
+    await number.fill("20");
+    expect(await page.evaluate(() => ({
+      sameMaterialInput: document.querySelector('[data-role="material-number"]') === window.materialInputBefore,
+      sameFieldFrame: document.querySelector('mlf-field-frame[data-field-id="extrusionspeed"]') === window.speedFrameBefore,
+      focused: document.activeElement === window.materialInputBefore,
+    }))).toEqual({ sameMaterialInput: true, sameFieldFrame: true, focused: true });
   });
 
   test("playground submits onehot, mappedTo fanout reports, and custom backend plugin", async ({ page }) => {
@@ -57,9 +102,9 @@ test.describe("MLForm new API browser smoke", () => {
       .poll(() =>
         page
           .locator("mlf-kit-disclosure")
-          .evaluate((host) => host.view.form.state.status),
+          .evaluate((host) => host.view.form.state.submissionStatus),
       )
-      .toBe("success");
+      .toBe("succeeded");
     await page.getByRole("button", { name: /Backend reports/ }).click();
 
     await expect(page.locator("mlf-backend-compare-report")).toBeVisible();
@@ -126,8 +171,11 @@ test.describe("MLForm new API browser smoke", () => {
     await clickSubmit(page, "Run Multi-backend Inference");
 
     await expect(page.getByText("Value does not match the expected pattern.").first()).toBeVisible();
-    await expect(page.getByText("Minimum length cannot exceed maximum length.").first()).toBeVisible();
-    await expect(page.getByText("Date must fall on a step of 7 day(s)").first()).toBeVisible();
+    await expect(page.getByText("Minimum length is 8 characters.").first()).toBeVisible();
+    await expect(page.getByText("Minimum value is 10.").first()).toBeVisible();
+    await expect(
+      page.getByText("Date must fall on a step of 7 day(s) from the minimum date.").first(),
+    ).toBeVisible();
     await expect(page.locator("body")).not.toContainText("TypeError");
     expect(errors).toEqual([]);
   });
