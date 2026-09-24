@@ -1,4 +1,8 @@
 import "./styles.css";
-import { mountDemoShell } from "./demo-shell.js";
+import { mountDemoPreview, mountDemoShell } from "./demo-shell.js";
 
-mountDemoShell();
+if (new URLSearchParams(window.location.search).get("preview") === "1") {
+  mountDemoPreview();
+} else {
+  mountDemoShell();
+}
