@@ -1,4 +1,5 @@
 import { createPrimitiveAdapter, defaultKitLabels } from "mlform/kit";
+import { attachDesignSystem } from "mlform/design";
 import { createFormView } from "mlform/view";
 import { primitiveStaticText } from "mlform/primitives";
 import { FORMULATION_EXAMPLES, getExampleById } from "./examples.js";
@@ -234,23 +235,23 @@ const createMaterialsPanel = (snapshot, view) => {
       .fd-material-label{display:grid;gap:.35rem}
       .fd-material-label span{text-align:center;font-size:.95rem;color:var(--mlf-color-text,#2c2847)}
       .fd-material-label select,.fd-material-label input{width:100%;min-height:var(--mlf-control-height,3rem);padding:.7rem .95rem;border-radius:var(--mlf-input-radius,12px);border:1px solid var(--mlf-color-border,#d9dce7);background:var(--mlf-color-surface,#fff);color:var(--mlf-color-text,#2c2847);font:inherit}
-      .fd-material-add{justify-self:center;display:inline-flex;align-items:center;gap:.65rem;padding:.72rem 1rem;border:0;border-radius:.45rem;background:#5f5f63;color:#fff;cursor:pointer}
+      .fd-material-add{justify-self:center;display:inline-flex;align-items:center;gap:.65rem;padding:.72rem 1rem;border:0;border-radius:.45rem;background:var(--mlf-color-accent,#5f5f63);color:var(--mlf-color-text-inverse,#fff);cursor:pointer}
       .fd-material-toolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem}
       .fd-material-badge{display:inline-flex;align-items:center;justify-content:center;padding:.28rem .7rem;border-radius:999px;font-size:.92rem;font-weight:700}
-      .fd-material-badge.good{background:rgba(121,226,123,.2);color:#16702a}
-      .fd-material-badge.warn{background:rgba(255,195,60,.18);color:#8f5a00}
-      .fd-material-badge.bad{background:rgba(239,64,73,.16);color:#b21f28}
-      .fd-material-danger{border:0;border-radius:.4rem;background:#ef4049;color:#fff;padding:.72rem .95rem;cursor:pointer}
+      .fd-material-badge.good{background:var(--mlf-color-surface-muted,#e8f8e9);color:var(--mlf-color-success,#16702a)}
+      .fd-material-badge.warn{background:var(--mlf-color-surface-muted,#fff4d7);color:var(--mlf-color-warning,#8f5a00)}
+      .fd-material-badge.bad{background:var(--mlf-color-danger-soft,rgba(239,64,73,.16));color:var(--mlf-color-danger,#b21f28)}
+      .fd-material-danger{border:0;border-radius:.4rem;background:var(--mlf-color-danger,#ef4049);color:var(--mlf-color-text-inverse,#fff);padding:.72rem .95rem;cursor:pointer}
       .fd-material-list{display:grid;gap:.8rem;max-height:34rem;overflow:auto;padding-right:.25rem}
       .fd-material-row{display:grid;gap:.8rem;padding:.9rem;border-radius:.8rem;border:1px solid color-mix(in srgb,var(--mlf-color-border,#d9dce7) 88%,transparent)}
       .fd-material-top{display:flex;align-items:center;justify-content:space-between;gap:.7rem}
       .fd-material-name{flex:1;text-align:center;color:var(--mlf-color-text,#2c2847)}
-      .fd-material-remove{border:0;border-radius:.35rem;background:transparent;color:#5f5a87;cursor:pointer;font-size:.78rem;padding:.35rem .45rem}
-      .fd-material-remove:hover{background:rgba(95,90,135,.1);color:#2c2847}
+      .fd-material-remove{border:0;border-radius:.35rem;background:transparent;color:var(--mlf-color-text-muted,#5f5a87);cursor:pointer;font-size:.78rem;padding:.35rem .45rem}
+      .fd-material-remove:hover{background:var(--mlf-color-hover-surface,rgba(95,90,135,.1));color:var(--mlf-color-text,#2c2847)}
       .fd-material-controls{display:grid;gap:.9rem;align-items:center;grid-template-columns:1fr 112px}
-      .fd-material-range{width:100%;accent-color:#8f8cd2}
+      .fd-material-range{width:100%;accent-color:var(--mlf-color-accent,#8f8cd2)}
       .fd-material-mini{display:grid;justify-items:center;gap:.3rem}
-      .fd-material-mini input{width:100%;min-height:2.85rem;padding:.45rem .7rem;border-radius:.55rem;border:1px solid var(--mlf-color-border,#d9dce7)}
+      .fd-material-mini input{width:100%;min-height:2.85rem;padding:.45rem .7rem;border-radius:.55rem;border:1px solid var(--mlf-color-border,#d9dce7);background:var(--mlf-color-surface,#fff);color:var(--mlf-color-text,#2c2847)}
       .fd-material-mini span{font-size:.84rem;color:var(--mlf-color-text-muted,#5f5a87)}
       .fd-material-empty{padding:.9rem 1rem;border-radius:.8rem;border:1px dashed var(--mlf-color-border,#d9dce7);text-align:center;color:var(--mlf-color-text-muted,#5f5a87)}
       @media (max-width:860px){.fd-materials-split,.fd-material-grid,.fd-material-controls{grid-template-columns:1fr}.fd-material-toolbar{flex-direction:column;align-items:stretch}}
@@ -507,9 +508,10 @@ const createViewShell = (view, host, primitiveRegistry) => {
   return { sync, dispose: () => ui.dispose() };
 };
 
-export const mountFormulationDemo = (container = document.body) => {
+export const mountFormulationDemo = (container = document.body, designSystem) => {
   const shell = createShell();
   container.replaceChildren(shell);
+  const attachedDesign = attachDesignSystem(shell, { config: designSystem });
 
   const select = shell.querySelector('[data-role="example-select"]');
   const loadButton = shell.querySelector('[data-role="load-example"]');
@@ -569,10 +571,14 @@ export const mountFormulationDemo = (container = document.body) => {
   });
 
   return {
+    updateDesignSystem(config) {
+      attachedDesign.update(config);
+    },
     unmount() {
       unsubscribe();
       rendered?.dispose();
       view?.dispose();
+      attachedDesign.disconnect();
       shell.remove();
     },
   };

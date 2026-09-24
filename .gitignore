@@ -23,3 +23,7 @@ test-results
 *.njsproj
 *.sln
 *.sw?
+
+
+output/
+.playwright-cli/

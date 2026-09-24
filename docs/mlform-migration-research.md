@@ -1,21 +1,65 @@
-# Investigacion para alinear el playground con mlform
+# Investigación histórica: migración a MLForm 0.1.21
 
-Fecha de comprobacion: 2026-08-23.
+> Documento histórico de la migración realizada el 2026-08-23. Para el contrato vigente y su verificación, consulta [`mlform-0.1.24-interface-analysis.md`](./mlform-0.1.24-interface-analysis.md).
 
-## Que version manda en este proyecto
+Fecha de comprobación: 2026-08-23.
 
-`prueba-mlform` no consume una version publicada. `package.json` apunta a `file:..\\mlform` y el workspace resuelve `mlform` como `link:../mlform`. Por tanto, para desarrollar y probar este repositorio manda el contrato del repositorio oficial adyacente, no el `latest` de npm.
+## Estado que manda
 
-Hay dos estados distintos:
+Este proyecto no instala MLForm desde npm. [`package.json`](../package.json) apunta a `file:..\\mlform` y [`pnpm-lock.yaml`](../pnpm-lock.yaml) lo resuelve como `link:../mlform`. La referencia para esta migración es, por tanto, el repositorio local `C:\software\mlform`.
 
-- npm y la ultima release de GitHub publican `0.1.19`. Fuentes: [paquete en npm](https://www.npmjs.com/package/mlform), [release v0.1.19](https://github.com/UlloaSP/mlform/releases/tag/v0.1.19) y [manifest publicado en `main`](https://github.com/UlloaSP/mlform/blob/19e2337d7384791b1ec4be1ddbce4476df87ec70/package.json).
-- El arbol de trabajo enlazado prepara `0.1.20` y contiene el nuevo contrato. La version figura en el [manifest local de mlform](../../mlform/package.json), y las reglas estan en los [tipos de submit](../../mlform/src/schema/types/submit.ts), el [normalizador de respuesta](../../mlform/src/runtime/submission/transport-response.ts) y la [documentacion local del transporte](../../mlform/docs/src/content/docs/es/kit/transport.md).
+El `HEAD` local de MLForm es `9a979ca` y su [manifest](../../mlform/package.json) declara `0.1.21`. El repositorio está limpio y `dist` fue reconstruido después de los cambios de fuente. La dependencia enlazada expone también `0.1.21`. No hace falta consultar npm o GitHub para decidir qué contrato ejecuta este proyecto. Además, [la tarea de release local](../../mlform/tasks/todo.md) dice expresamente que `0.1.21` se preparó sin publicar.
 
-Esta investigacion toma el segundo estado como objetivo, porque es el que ejecutara el proyecto cuando se reconstruya `../mlform`. Conviene no declarar compatibilidad con `0.1.20` en un paquete remoto hasta que exista el tag o la publicacion.
+## Cronología desde 66e49fe
 
-## Cambio que rompe el playground
+El commit `66e49fe` de `prueba-mlform`, creado a las 16:14, migró los resultados de report a envelopes con `backend`, `mappedTo`, `status` y `payload`. Después se cerraron dos commits en MLForm:
 
-Cada elemento de `TransportResponse.reports` deja de ser un objeto libre. Ahora debe ser un `ReportResult` explicito y llevar la identidad exacta `(backend, mappedTo)` junto a un estado. El [tipo oficial](../../mlform/src/schema/types/submit.ts) admite solo estas formas:
+- `f0152af`, tag `v0.1.20`, a las 16:35. Formalizó el contrato estricto de reports, añadió validación de schema y publicó helpers como `createFanoutTransport`. Es el estado que la migración de `66e49fe` ya anticipaba.
+- `9a979ca`, `0.1.21`, a las 17:47. Eliminó los aliases transitorios de valores y dejó solo `inputs`, `displayValues` y `modelValues` en requests, resultados, hooks y report fetches. Este es el cambio nuevo que afecta al consumidor.
+
+La comparación reproducible es:
+
+```text
+git -C C:\software\mlform diff v0.1.20..HEAD
+git -C C:\software\prueba-mlform show 66e49fe
+```
+
+## Cambio que requiere migración
+
+Los contratos públicos [`SubmitRequest`](../../mlform/src/transport/types.ts), [`SubmitResult`](../../mlform/src/schema/types/submit.ts) y [los hooks de submit](../../mlform/src/runtime/types/transport.ts) ya no contienen estas propiedades:
+
+```text
+values
+fieldValues
+serializedValues
+serializedFieldValues
+```
+
+Los únicos registros públicos de valores completos son:
+
+- `inputs`, una lista por campo con `fieldId`, `value`, `serializedValue`, `mappedTo` y los `modelValues` de ese campo;
+- `displayValues`, datos de revisión o exportación keyed por `displayKey`;
+- `modelValues`, datos para el modelo keyed por `mappedTo`.
+
+MLForm aplicó la misma limpieza a los contextos de behaviors, los requests de report fetch y los adaptadores de primitives. Fuentes: [behavior](../../mlform/src/runtime/types/behavior.ts), [report fetch](../../mlform/src/schema/report-fetch-request.ts) y [contratos de primitives](../../mlform/src/primitives/controller-types.ts). El [ledger de deuda](../../mlform/DEBT.md) y [la tarea 0.1.21](../../mlform/tasks/todo.md) confirman que no es una deprecación: los aliases se retiraron.
+
+En el commit `66e49fe`, el producto ya consumía `request.modelValues`; por eso no hay que modificar los transports. Las incompatibilidades estaban limitadas a las comprobaciones de test:
+
+- `scripts/smoke-mlform-api.mjs` leía `request.fieldValues` tres veces.
+- `tests/e2e/mlform-new-api.spec.js` leía `lastResult.fieldValues` una vez.
+
+Esas comprobaciones deben buscar el campo por `fieldId` dentro de `inputs` y verificar `input.value`. No deben reconstruir un mapa alternativo, porque eso reintroduciría el alias que MLForm acaba de eliminar.
+
+## Lo que sigue siendo válido
+
+La migración de reports de `66e49fe` no necesita una segunda reescritura:
+
+- [`src/formulation-demo/transport.js`](../src/formulation-demo/transport.js) devuelve `prediction` como `ready` bajo `backend: "default"`.
+- [`src/playground/transport.js`](../src/playground/transport.js) devuelve un envelope por par exacto de backend y output.
+- [`src/playground/schema.js`](../src/playground/schema.js) separa el backend de `mappedTo`.
+- [`resolveMappedReportPayload`](../../mlform/src/schema/mapped-to.ts) sigue resolviendo únicamente por rutas explícitas `(backend, mappedTo)`.
+
+El envelope vigente continúa siendo:
 
 ```ts
 { backend, mappedTo, status: "ready", payload, context? }
@@ -23,78 +67,36 @@ Cada elemento de `TransportResponse.reports` deja de ser un objeto libre. Ahora 
 { backend, mappedTo, status: "skipped", reason?, context? }
 ```
 
-El [normalizador](../../mlform/src/runtime/submission/transport-response.ts) rechaza lo siguiente durante el submit:
+`ready` requiere `payload`; `pending` y `skipped` no lo admiten. [`ReportResult`](../../mlform/src/schema/types/submit.ts) es la fuente del tipo.
 
-- un `reports` que no sea un array;
-- un resultado sin `backend` no vacio;
-- un resultado sin `mappedTo` string o number;
-- un estado distinto de `ready`, `pending` o `skipped`;
-- `ready` sin `payload`;
-- `pending` o `skipped` con `payload`;
-- `context` que no sea objeto o `reason` no string.
+## Otros cambios públicos, sin migración obligatoria aquí
 
-Los dos transports del playground devolvian `{ mappedTo, payload }`. Son incompatibles con este contrato aunque funcionen contra un bundle anterior:
+Los subpaths de paquete no cambiaron. El [manifest](../../mlform/package.json) sigue exportando `kit`, `runtime`, `schema`, `builtins`, `transport`, `primitives` y `design`, y todos los imports actuales del proyecto usan esos entrypoints.
 
-- `src/formulation-demo/transport.js` debe usar `backend: "default"` y `status: "ready"` para `prediction`.
-- `src/playground/transport.js` debe emitir `backend: backend.id`, `mappedTo: reportKey`, `status: "ready"` y `payload`.
+MLForm 0.1.21 añade o endurece APIs que este playground no consume:
 
-La documentacion oficial tambien avisa de que los objetos legacy que mezclan routing y payload se rechazan. Fuente: [contrato de backend](../../mlform/docs/src/content/docs/es/guides/backend-contract.md).
+- [`resolveMappedRoutes`](../../mlform/src/schema/mapped-to.ts) conserva el backend aunque dos backends usen el mismo target. Los resolvers actuales ya delegan en `resolveMappedReportPayload`.
+- [`validateSchema`, `findUnknownKinds` y `toSchemaJsonSchema`](../../mlform/src/schema/validation.ts) ya eran públicas en 0.1.20. En 0.1.21 mejoran los paths para errores de `series`; este proyecto define schemas estáticos válidos y no necesita adoptarlas.
+- [`SchemaNormalizationError`](../../mlform/src/schema/normalize.ts) aporta paths exactos, incluidos subcampos de `series`. Los schemas actuales normalizan sin error.
+- `inputs`, `displayValues`, `modelValues` y `reportContexts` pasan de opcionales a obligatorios en varios contratos internos de primitives y report fetch. El runtime los construye; los transports de este proyecto no fabrican `SubmitResult` ni `ReportFetchRequest`.
 
-## Routing de reports
+La eliminación de submission streaming tampoco exige trabajo. Ocurrió en `1569268`, antes de `66e49fe`, y no hay usos de `stream`, progress events ni partial-update policies en `src`, `scripts` o `tests` del consumidor.
 
-`mappedTo` ya no debe codificar el backend dentro de un string como `"baseline.releaseRecommendation"`. El resolver compara por separado `backend` y `mappedTo`; vease [`resolveMappedReportResult`](../../mlform/src/schema/mapped-to.ts).
+Hay documentación heredada en MLForm que todavía menciona `serializedValues`. Para esta migración mandan los tipos de `src`, sus declaraciones en `dist`, el diff `v0.1.20..HEAD`, [`DEBT.md`](../../mlform/DEBT.md) y [`tasks/todo.md`](../../mlform/tasks/todo.md).
 
-Para este proyecto, los reports multi-backend deben declarar:
+## Plan de actualización
 
-```js
-mappedTo: { [backend.id]: "releaseRecommendation" }
-mappedTo: { [backend.id]: "latencyForecast" }
-```
+1. Sustituir las lecturas de `fieldValues` en el smoke test por búsquedas en `request.inputs` usando `fieldId` y, cuando importe, `value`.
+2. Sustituir la aserción E2E de `lastResult.fieldValues["risk-tier"]` por la entrada equivalente de `lastResult.inputs`.
+3. No tocar los transports, el schema ni los report definitions: ya cumplen el contrato de `0.1.21`.
+4. Ejecutar una búsqueda de los cuatro aliases retirados en `src`, `scripts` y `tests` para impedir que quede otro consumidor oculto.
+5. Verificar contra el `dist` actual de MLForm con `pnpm test:mlform-api`, `pnpm build` y `pnpm test:e2e`.
 
-y el transport debe responder, por ejemplo:
+## Criterios de aceptación
 
-```js
-{
-  backend: "baseline",
-  mappedTo: "releaseRecommendation",
-  status: "ready",
-  payload: prediction,
-}
-```
-
-Un `mappedTo` escalar sigue siendo valido. Cuando el submit no tiene backend explicito, mlform lo asocia a `"default"`; por eso la demo de formulacion puede conservar `mappedTo: "prediction"` si su respuesta usa `backend: "default"`. La guia de reports confirma que `id` identifica el controlador visual, mientras `mappedTo` identifica la salida del backend: [reports](../../mlform/docs/src/content/docs/schema/reports.md).
-
-La normalizacion ya permite que varios controladores consuman el mismo par `(backend, mappedTo)`. El error por targets duplicados en el schema se elimino; la ambiguedad que sigue siendo invalida es devolver dos resultados para el mismo par. Fuentes: [normalizacion del schema](../../mlform/src/schema/normalize.ts) y [resolucion de mappings](../../mlform/src/schema/mapped-to.ts).
-
-## Estados y contexto
-
-`skipped` se suma a los estados visuales de un report. El controlador lo trata como terminal y no ejecuta un fetch posterior. Los primitives ya tienen texto por defecto para ese estado. Fuentes: [tipo `ReportStatus`](../../mlform/src/schema/types/report.ts), [controlador de reports](../../mlform/src/runtime/reports/controller.ts) y [texto de primitives](../../mlform/src/primitives/constants.ts).
-
-Cada resultado puede incluir un `context` propio con `displayValues`, `modelValues`, `meta` y `raw`. mlform usa ese contexto antes que el contexto global al resolver o hacer fetch del report. Esto importa si el playground simula respuestas distintas por backend. Fuente: [creacion de contextos](../../mlform/src/schema/report-context.ts).
-
-No hace falta cambiar ahora `backend-compare`: no tiene `mappedTo` y su `resolvePayload` lee el agregado de `result.raw`. Tampoco hace falta cambiar el resolver custom de formulacion, que ya delega en `resolveMappedReportPayload`; esa funcion ahora extrae `payload` solo de un resultado `ready`.
-
-## Otros cambios publicos observados
-
-- `ReportResult`, `ReportResultContext` y `ReportContext` se reexportan desde `mlform/runtime`; tambien siguen disponibles desde `mlform/schema`. Fuente: [exports de runtime](../../mlform/src/runtime/index.ts).
-- `resolveMappedReportResult` es una nueva exportacion de `mlform/schema` a traves de `mapped-to.ts`. Fuente: [indice de schema](../../mlform/src/schema/index.ts).
-- `resolve` pasa a ser opcional en `defineReportKind`. Esto permite reports declarativos cuyo valor llega ya resuelto por el transport. No obliga a modificar los `defineReportDefinition` usados por este playground. Fuente: [`defineReportKind`](../../mlform/src/kit/kinds/define-report-kind.ts).
-- Los subpaths publicos del paquete no cambian: `kit`, `runtime`, `schema`, `builtins`, `transport`, `primitives` y `design`. Los imports actuales del proyecto siguen siendo validos. Fuente: [manifest de mlform](../../mlform/package.json).
-
-## Plan de migracion recomendado
-
-1. Cambiar ambos transports al envelope discriminado de `ReportResult`.
-2. Separar backend y clave de report en el schema y en la respuesta multi-backend.
-3. Reforzar el smoke test para comprobar `backend`, `mappedTo`, `status` y `payload`, no solo la cantidad de reports.
-4. Mantener una prueba de navegador que confirme que los seis reports built-in y `backend-compare` terminan en `ready`.
-5. Reconstruir `../mlform` antes de verificar. La dependencia local ejecuta sus artefactos `dist`, y editar `src` no actualiza esos archivos por si solo.
-6. Ejecutar `pnpm run test:mlform-api`, `pnpm run build` y `pnpm run test:e2e` en este repositorio.
-
-## Criterios de aceptacion
-
-- Ninguna respuesta contiene el formato legacy `{ mappedTo, payload }` sin `backend` y `status`.
-- Los nueve resultados agregados llevan un par `(backend, mappedTo)` valido y unico.
-- Los reports del schema multi-backend usan objetos `mappedTo` keyed por backend.
-- La demo de formulacion entrega `prediction` como `ready` bajo `backend: "default"`.
-- El smoke test, el build y los tests de navegador pasan contra un `dist` reconstruido desde el arbol de trabajo de mlform.
-
+- `rg "fieldValues|serializedValues|serializedFieldValues" src scripts tests` no encuentra usos. `values` no se prohíbe de forma global porque `snapshot.form.values` es estado legítimo del formulario, no un alias de submit.
+- El smoke comprueba valores de runtime por `inputs`, datos de modelo por `modelValues` y datos de presentación por `displayValues`.
+- E2E comprueba el valor de `risk-tier` mediante `lastResult.inputs`.
+- Los transports continúan devolviendo nueve rutas únicas en el playground y una ruta `default/prediction` en formulación, todas con estado `ready` y payload.
+- `pnpm test:mlform-api`, `pnpm build` y `pnpm test:e2e` pasan con la dependencia enlazada a MLForm `0.1.21`.
+- El cambio no añade un mapa de compatibilidad para `fieldValues` ni modifica código de producto que ya cumple el contrato.

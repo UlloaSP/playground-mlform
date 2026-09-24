@@ -42,7 +42,7 @@ test.describe("MLForm new API browser smoke", () => {
 
   test("demo menu supports keyboard navigation", async ({ page }) => {
     await page.goto("/#formulation-kit");
-    const menuButton = page.getByRole("button", { name: "Select demo" });
+    const menuButton = page.getByRole("button", { name: "Seleccionar playground y diseño" });
     const menu = page.getByRole("menu", { name: "Demo selector" });
 
     await expect(menu).toBeHidden();
@@ -63,6 +63,36 @@ test.describe("MLForm new API browser smoke", () => {
     await expect(page).toHaveURL(/#tabs-classic$/);
     await expect(menu).toBeHidden();
     await expect(menuButton).toBeFocused();
+  });
+
+  test("design controls update the mounted form and persist across demos", async ({ page }) => {
+    await page.goto("/#playground-stacked");
+    await page.getByRole("button", { name: "Seleccionar playground y diseño" }).click();
+
+    const theme = page.getByLabel("Design system");
+    const recipe = page.getByLabel("Estilo");
+    const mode = page.getByLabel("Apariencia");
+    await expect(theme.locator("option")).toHaveCount(7);
+    await expect(recipe.locator("option")).toHaveCount(4);
+
+    const input = page.locator("mlf-field-frame input").first();
+    await input.fill("Keep this value");
+    await theme.selectOption("sage");
+    await recipe.selectOption("soft");
+    await mode.selectOption("dark");
+    await expect(input).toHaveValue("Keep this value");
+    await expect(page.locator("[data-mlf-theme-id]").first()).toHaveAttribute("data-mlf-theme-id", "sage");
+    await expect(page.locator("[data-mlf-recipe-id]").first()).toHaveAttribute("data-mlf-recipe-id", "soft");
+    await expect(page.locator("[data-mlf-effective-scheme]").first()).toHaveAttribute("data-mlf-effective-scheme", "dark");
+
+    await page.reload();
+    await page.getByRole("button", { name: "Seleccionar playground y diseño" }).click();
+    await expect(theme).toHaveValue("sage");
+    await expect(recipe).toHaveValue("soft");
+    await expect(mode).toHaveValue("dark");
+    await page.getByRole("menuitemradio", { name: "M3DISEEN" }).click();
+    await expect(page.locator(".fd-shell")).toHaveAttribute("data-mlf-theme-id", "sage");
+    await expect(page.locator(".fd-shell")).toHaveAttribute("data-mlf-effective-scheme", "dark");
   });
 
   test("formulation renders its mapped prediction report", async ({ page }) => {

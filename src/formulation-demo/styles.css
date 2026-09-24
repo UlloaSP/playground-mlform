@@ -1,6 +1,8 @@
 .fd-shell {
   min-height: 100dvh;
   padding: 1.2rem;
+  color: var(--mlf-color-text, #221d36);
+  color-scheme: light dark;
 }
 
 .fd-page {
@@ -12,8 +14,8 @@
 
 .fd-card,
 .fd-form-shell {
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(123, 120, 180, 0.34);
+  background: var(--mlf-color-surface, #fff);
+  border: 1px solid var(--mlf-color-border, #d9dce7);
   border-radius: 0.5rem;
   box-shadow: 0 16px 30px rgba(70, 61, 120, 0.12);
 }
@@ -22,6 +24,7 @@
   width: 100%;
   border: 0;
   background: transparent;
+  color: inherit;
   padding: 1rem 1.2rem 0.8rem;
   display: flex;
   align-items: flex-start;
@@ -38,13 +41,13 @@
 
 .fd-top-toggle p {
   margin: 0.15rem 0 0;
-  color: #5f5a87;
+  color: var(--mlf-color-text-muted, #5f5a87);
   font-size: 0.95rem;
 }
 
 .fd-top-caret {
   font-size: 1.4rem;
-  color: #2d2a54;
+  color: var(--mlf-color-text, #2d2a54);
   transition: transform 150ms ease;
 }
 
@@ -68,7 +71,7 @@
   width: 100%;
   display: grid;
   gap: 0.35rem;
-  color: #3d385d;
+  color: var(--mlf-color-text, #3d385d);
   font-size: 0.95rem;
 }
 
@@ -85,10 +88,10 @@
   width: 100%;
   min-height: 2.7rem;
   border-radius: 0.35rem;
-  border: 1px solid #cfd3e2;
+  border: 1px solid var(--mlf-color-border, #cfd3e2);
   padding: 0.45rem 0.8rem;
-  background: #fff;
-  color: #2c2847;
+  background: var(--mlf-color-surface, #fff);
+  color: var(--mlf-color-text, #2c2847);
 }
 
 .fd-host-button {
@@ -99,8 +102,8 @@
   border-radius: 0.35rem;
   cursor: pointer;
   padding: 0.7rem 1rem;
-  background: #8f8cd2;
-  color: #fff;
+  background: var(--mlf-color-accent, #8f8cd2);
+  color: var(--mlf-color-text-inverse, #fff);
 }
 
 .fd-top-toggle:focus-visible,
@@ -114,27 +117,12 @@
 .fd-material-label input:focus-visible,
 .fd-material-mini input:focus-visible,
 .fd-material-range:focus-visible {
-  outline: 3px solid #46418f;
+  outline: 3px solid var(--mlf-color-accent, #46418f);
   outline-offset: 3px;
 }
 
 .fd-form-shell {
   padding: 0.8rem;
-}
-
-.fd-form-host {
-  --mlf-color-bg: transparent;
-  --mlf-color-surface: #ffffff;
-  --mlf-color-border: #d9dce7;
-  --mlf-color-text: #221d36;
-  --mlf-color-text-muted: #5f5a87;
-  --mlf-color-accent: #8f8cd2;
-  --mlf-color-accent-hover: #7a77c8;
-  --mlf-color-danger: #dc4a54;
-  --mlf-color-success: #159b4d;
-  --mlf-control-height: 2.85rem;
-  --mlf-input-radius: 10px;
-  --mlf-layout-gap: 1rem;
 }
 
 .fd-layout-root,
@@ -156,7 +144,7 @@
 
 .fd-layout-title {
   margin: 0;
-  color: #221d36;
+  color: var(--mlf-color-text, #221d36);
   font-size: 1.85rem;
   font-weight: 500;
   text-align: center;
@@ -164,7 +152,7 @@
 
 .fd-layout-description {
   margin: 0;
-  color: #5f5a87;
+  color: var(--mlf-color-text-muted, #5f5a87);
   font-size: 0.95rem;
   text-align: center;
 }
@@ -186,9 +174,9 @@
 .fd-form-errors {
   padding: 0.85rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid rgba(220, 74, 84, 0.25);
-  background: rgba(220, 74, 84, 0.08);
-  color: #9f2030;
+  border: 1px solid var(--mlf-color-danger, #dc4a54);
+  background: var(--mlf-color-danger-soft, rgba(220, 74, 84, 0.08));
+  color: var(--mlf-color-danger, #9f2030);
 }
 
 .fd-form-errors p {
@@ -204,7 +192,7 @@
 }
 
 .fd-form-status {
-  color: #5f5a87;
+  color: var(--mlf-color-text-muted, #5f5a87);
   font-size: 0.92rem;
 }
 
@@ -213,8 +201,8 @@
   border: 0;
   border-radius: 0.5rem;
   padding: 0.8rem 1.15rem;
-  background: #8f8cd2;
-  color: #fff;
+  background: var(--mlf-color-accent, #8f8cd2);
+  color: var(--mlf-color-text-inverse, #fff);
   font: inherit;
   font-weight: 600;
   cursor: pointer;

@@ -44,6 +44,10 @@ body > div {
   padding: 4.75rem 1rem 1rem;
 }
 
+.app-shell[data-mode="dark"] {
+  background: linear-gradient(180deg, #28263f 0%, #171626 100%);
+}
+
 .app-menu {
   position: fixed;
   top: 1rem;
@@ -86,19 +90,22 @@ body > div {
 }
 
 .app-menu-button:focus-visible,
-.app-menu-option:focus-visible {
+.app-menu-option:focus-visible,
+.app-menu-field select:focus-visible {
   outline: 3px solid #332d59;
   outline-offset: 3px;
 }
 
-.app-menu-list {
+.app-menu-panel {
   position: absolute;
   top: calc(100% + 0.55rem);
   left: 0;
-  width: 14rem;
-  padding: 0.45rem;
+  width: min(18rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 5rem);
+  overflow-y: auto;
+  padding: 0.75rem;
   display: grid;
-  gap: 0.25rem;
+  gap: 0.55rem;
   border: 1px solid rgba(92, 85, 149, 0.22);
   border-radius: 0.85rem;
   background: rgba(255, 255, 255, 0.98);
@@ -112,7 +119,7 @@ body > div {
     transform 140ms ease;
 }
 
-.app-menu.is-open .app-menu-list {
+.app-menu.is-open .app-menu-panel {
   transform: translateY(0) scale(1);
   opacity: 1;
   pointer-events: auto;
@@ -183,13 +190,51 @@ body > div {
   }
 }
 
-.app-menu-list[hidden] {
+.app-menu-section-label {
+  padding: 0 0.35rem;
+  color: #554f79;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.app-menu-list {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.app-menu-settings {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.8rem 0.35rem 0.2rem;
+  border-top: 1px solid #ddd9ed;
+}
+
+.app-menu-field {
+  display: grid;
+  gap: 0.25rem;
+  color: #332d59;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.app-menu-field select {
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #c7c2df;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #332d59;
+  cursor: pointer;
+}
+
+.app-menu-panel[hidden] {
   display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .app-menu-button,
-  .app-menu-list {
+  .app-menu-panel {
     transition: none;
   }
 }

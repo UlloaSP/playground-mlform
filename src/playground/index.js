@@ -15,6 +15,7 @@ export const mountPlayground = (
   container = document.body,
   layout = "stacked",
   schema = FORM_SCHEMA,
+  designSystem = PLAYGROUND_DESIGN_SYSTEM,
 ) => {
   return mountForm(container, {
     schema,
@@ -25,23 +26,23 @@ export const mountPlayground = (
     containerStrategy: "replace",
     reportPane: "always",
     reportFetchMode: "all",
-    designSystem: PLAYGROUND_DESIGN_SYSTEM,
+    designSystem,
     labels: PLAYGROUND_LABELS,
     primitiveText: PRIMITIVE_TEXT,
   });
 };
 
-export const mountFieldCombinationsPlayground = (container = document.body) =>
-  mountPlayground(container, "split", FIELD_COMBINATIONS_SCHEMA);
+export const mountFieldCombinationsPlayground = (container = document.body, designSystem) =>
+  mountPlayground(container, "split", FIELD_COMBINATIONS_SCHEMA, designSystem);
 
-export const mountWizardPlayground = (container = document.body) => {
+export const mountWizardPlayground = (container = document.body, designSystem = PLAYGROUND_DESIGN_SYSTEM) => {
   return mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createAggregateTransport(),
     plugins: [BACKEND_COMPARE_PLUGIN],
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: PLAYGROUND_WIZARD_LAYOUTS.reports,
-    designSystem: PLAYGROUND_DESIGN_SYSTEM,
+    designSystem,
     reportFetchMode: "all",
     labels: {
       prev: "Back",
@@ -54,14 +55,14 @@ export const mountWizardPlayground = (container = document.body) => {
   });
 };
 
-export const mountTabsPlayground = (container = document.body) => {
+export const mountTabsPlayground = (container = document.body, designSystem = PLAYGROUND_DESIGN_SYSTEM) => {
   return mountForm(container, {
     schema: FORM_SCHEMA,
     transport: createAggregateTransport(),
     plugins: [BACKEND_COMPARE_PLUGIN],
     primitiveRegistry: createAppPrimitiveRegistry(),
     layout: PLAYGROUND_TABS_LAYOUTS.classic,
-    designSystem: PLAYGROUND_DESIGN_SYSTEM,
+    designSystem,
     reportFetchMode: "all",
     labels: {
       ...PLAYGROUND_LABELS,
