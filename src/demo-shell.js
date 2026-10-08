@@ -7,6 +7,7 @@ import {
   mountWizardPlayground,
 } from "./playground/index.js";
 import { PLAYGROUND_DESIGN_SYSTEM } from "./playground/config.js";
+import { mountSeriesPlayground } from "./playground/series.js";
 
 const DESIGN_STORAGE_KEY = "mlform-playground-design";
 const VIEWPORT_STORAGE_KEY = "mlform-playground-viewport";
@@ -86,6 +87,11 @@ const DEMOS = [
     id: "wizard-reports",
     label: "Wizard",
     mount: (container, designSystem) => mountWizardPlayground(container, designSystem),
+  },
+  {
+    id: "series",
+    label: "Series",
+    mount: (container, designSystem) => mountSeriesPlayground(container, designSystem),
   },
   {
     id: "tabs-classic",

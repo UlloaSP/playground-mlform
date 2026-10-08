@@ -7,6 +7,7 @@ const demos = [
   ["field-combinations", "Text required bounded"],
   ["wizard-reports", "Core controls"],
   ["tabs-classic", "Basics"],
+  ["series", "Schema and model inputs"],
 ];
 
 const pageErrors = (page) => {
