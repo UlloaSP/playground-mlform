@@ -136,6 +136,10 @@
   gap: 0.85rem;
 }
 
+.fd-layout-section[hidden] {
+  display: none;
+}
+
 .fd-layout-copy {
   display: grid;
   gap: 0.25rem;

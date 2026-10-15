@@ -157,6 +157,11 @@ test.describe("MLForm new API browser smoke", () => {
 
   test("formulation renders its mapped prediction report", async ({ page }) => {
     const errors = pageErrors(page);
+    await page.route("**/api/m3diseen/a2022/*", (route) => {
+      const endpoint = route.request().url().split("/").at(-1);
+      const predictions = { filament_mechanical_characteristics: "Good", extrusion_temp: 110, printability: "yes", printing_temp: 180, dissolution: [62, 210, 290] };
+      return route.fulfill({ contentType: "application/json", body: JSON.stringify({ prediction: predictions[endpoint] }) });
+    });
     await page.goto("/#formulation-kit");
     await expect(page.getByText("Awaiting submission")).toBeVisible();
     await clickSubmit(page, "Complete Prediction");

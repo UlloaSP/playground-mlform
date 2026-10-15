@@ -14,7 +14,6 @@ Object.assign(globalThis, {
   HTMLInputElement: dom.window.HTMLInputElement,
   Event: dom.window.Event,
   CustomEvent: dom.window.CustomEvent,
-  AbortController: dom.window.AbortController,
 });
 
 const assert = (condition, message) => {
@@ -27,6 +26,7 @@ const { createFormView } = await import("mlform/view");
 const { FORMULATION_PLUGIN } = await import("../src/formulation-demo/registry.js");
 const { createFormulationSchema } = await import("../src/formulation-demo/schema.js");
 const { createFormulationTransport } = await import("../src/formulation-demo/transport.js");
+const { FORMULATION_EXAMPLES } = await import("../src/formulation-demo/examples.js");
 const { FORM_SCHEMA } = await import("../src/playground/schema.js");
 const { PLAYGROUND_SECTIONED_LAYOUT } = await import("../src/playground/section-layouts.js");
 const { createAggregateTransport } = await import("../src/playground/transport.js");
@@ -34,10 +34,18 @@ const { BACKEND_COMPARE_PLUGIN } = await import("../src/playground/report-defini
 
 const formulationSchema = createFormulationSchema();
 const formulationTransport = createFormulationTransport();
+const originalFetch = globalThis.fetch;
+globalThis.fetch = async (url) => {
+  const endpoint = String(url).split("/").at(-1);
+  const predictions = { filament_mechanical_characteristics: "Good", extrusion_temp: 110, printability: "yes", printing_temp: 180, dissolution: [62, 210, 290] };
+  assert(endpoint in predictions, `unexpected formulation endpoint ${endpoint}`);
+  return { ok: true, json: async () => ({ prediction: predictions[endpoint] }) };
+};
 let formulationRequest;
 let formulationResponse;
 const formulationView = createFormView({
   schema: formulationSchema,
+  initialValues: FORMULATION_EXAMPLES[1].values,
   transport: {
     async submit(request) {
       formulationRequest = request;
@@ -49,6 +57,7 @@ const formulationView = createFormView({
   reportFetchMode: "all",
 });
 await formulationView.submitPipeline();
+globalThis.fetch = originalFetch;
 assert(formulationView.form.state.lifecycle === "active", "formulation view is not active");
 assert(formulationView.form.state.operation === "idle", "formulation operation did not settle");
 assert(

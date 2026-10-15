@@ -209,7 +209,7 @@ const renderMaterialRows = (materials) =>
         )
         .join("");
 
-const createMaterialsPanel = (snapshot, view) => {
+const createMaterialsPanel = (snapshot, view, submitPrediction) => {
   const panel = document.createElement("section");
   panel.className = "fd-materials-panel";
 
@@ -313,7 +313,7 @@ const createMaterialsPanel = (snapshot, view) => {
   });
 
   panel.querySelector('[data-role="submit-inline"]')?.addEventListener("click", () => {
-    view.submit();
+    void submitPrediction();
   });
 
   panel.addEventListener("click", (event) => {
@@ -331,7 +331,7 @@ const createMaterialsPanel = (snapshot, view) => {
   });
 
   let activeIds = activeMaterials.map((material) => material.id).join("|");
-  const sync = (nextSnapshot) => {
+  const sync = (nextSnapshot, busy = false) => {
     const nextActive = getActiveMaterials(nextSnapshot.form.values);
     const nextIds = nextActive.map((material) => material.id).join("|");
     const list = panel.querySelector(".fd-material-list");
@@ -362,13 +362,14 @@ const createMaterialsPanel = (snapshot, view) => {
     const operation = nextSnapshot.form.operation;
     const inlineSubmit = panel.querySelector('[data-role="submit-inline"]');
     inlineSubmit.disabled =
+      busy ||
       nextSnapshot.form.lifecycle !== "active" ||
       operation === "validating" ||
       operation === "submitting";
     inlineSubmit.textContent =
       operation === "validating"
         ? FORM_LABELS.validating
-        : operation === "submitting"
+        : busy || operation === "submitting"
           ? FORM_LABELS.submitting
           : FORM_LABELS.submit;
   };
@@ -376,7 +377,7 @@ const createMaterialsPanel = (snapshot, view) => {
   return { element: panel, sync };
 };
 
-const renderNode = (node, snapshot, view, ui, materialSyncs) => {
+const renderNode = (node, snapshot, view, ui, materialSyncs, submitPrediction) => {
   if (node.kind === "section") {
     const section = document.createElement("section");
     section.className = "fd-layout-section";
@@ -407,7 +408,7 @@ const renderNode = (node, snapshot, view, ui, materialSyncs) => {
     children.className = "fd-layout-children";
 
     node.children.forEach((child) => {
-      children.append(renderNode(child, snapshot, view, ui, materialSyncs));
+      children.append(renderNode(child, snapshot, view, ui, materialSyncs, submitPrediction));
     });
 
     section.append(children);
@@ -419,7 +420,7 @@ const renderNode = (node, snapshot, view, ui, materialSyncs) => {
     group.className = `fd-layout-group${node.columns ? ` fd-columns-${node.columns}` : ""}`;
     group.dataset.groupId = node.id;
     node.children.forEach((child) => {
-      group.append(renderNode(child, snapshot, view, ui, materialSyncs));
+      group.append(renderNode(child, snapshot, view, ui, materialSyncs, submitPrediction));
     });
     return group;
   }
@@ -439,7 +440,7 @@ const renderNode = (node, snapshot, view, ui, materialSyncs) => {
   }
 
   if (node.kind === "custom" && node.id === "materials") {
-    const panel = createMaterialsPanel(snapshot, view);
+    const panel = createMaterialsPanel(snapshot, view, submitPrediction);
     materialSyncs.push(panel.sync);
     return panel.element;
   }
@@ -447,15 +448,40 @@ const renderNode = (node, snapshot, view, ui, materialSyncs) => {
   throw new TypeError(`Unknown layout node "${node.kind}".`);
 };
 
-const createViewShell = (view, host, primitiveRegistry) => {
+const createViewShell = (view, host, primitiveRegistry, setBusy) => {
   const ui = createPrimitiveAdapter(view, { primitiveRegistry, primitiveText: PRIMITIVE_TEXT });
   const snapshot = view.getSnapshot();
   const materialSyncs = [];
   const root = document.createElement("div");
   root.className = "fd-layout-root";
+  let pending = null;
+  let disposed = false;
+  let successfulSubmitCount = 0;
+  let successfulValues = null;
+  let resultInvalidated = false;
+  const submitPrediction = async () => {
+    if (pending || disposed) return;
+    const submission = {
+      controller: new AbortController(),
+      valuesKey: JSON.stringify(view.form.state.values),
+      edited: false,
+    };
+    pending = submission;
+    sync(view.getSnapshot());
+    try {
+      await view.submit({ signal: submission.controller.signal });
+    } catch (error) {
+      if (!disposed && !submission.edited && error.name !== "AbortError" && view.form.state.errors.form.length === 0) {
+        view.form.setExternalErrors({ form: [error.message] });
+      }
+    } finally {
+      if (pending === submission) pending = null;
+      if (!disposed) sync(view.getSnapshot());
+    }
+  };
   try {
     snapshot.layout.children.forEach((node) => {
-      root.append(renderNode(node, snapshot, view, ui, materialSyncs));
+      root.append(renderNode(node, snapshot, view, ui, materialSyncs, submitPrediction));
     });
   } catch (error) {
     ui.dispose();
@@ -477,10 +503,27 @@ const createViewShell = (view, host, primitiveRegistry) => {
   host.replaceChildren(root);
 
   const submitButton = actions.querySelector('[data-role="submit-button"]');
-  submitButton?.addEventListener("click", () => view.submit());
+  submitButton?.addEventListener("click", () => { void submitPrediction(); });
   const statusNode = actions.querySelector('[data-role="form-status"]');
+  const results = root.querySelector('[data-section-id="prediction-section"]');
   const sync = (nextSnapshot) => {
-    materialSyncs.forEach((update) => update(nextSnapshot));
+    const valuesKey = JSON.stringify(nextSnapshot.form.values);
+    if (pending && !pending.edited && valuesKey !== pending.valuesKey) {
+      pending.edited = true;
+      resultInvalidated = true;
+      pending.controller.abort();
+    }
+    const operation = nextSnapshot.form.operation;
+    const busy = Boolean(pending) || operation === "validating" || operation === "submitting";
+    if (!busy && nextSnapshot.form.submissionStatus === "succeeded" && nextSnapshot.form.submitCount !== successfulSubmitCount) {
+      successfulSubmitCount = nextSnapshot.form.submitCount;
+      successfulValues = valuesKey;
+      resultInvalidated = false;
+    }
+    const stale = successfulValues !== null && valuesKey !== successfulValues;
+    results.hidden = resultInvalidated || (successfulValues !== null && (busy || stale || nextSnapshot.form.submissionStatus !== "succeeded"));
+    materialSyncs.forEach((update) => update(nextSnapshot, busy));
+    setBusy(busy);
     const formErrors = nextSnapshot.form.errors.form ?? [];
     errors.hidden = formErrors.length === 0;
     errors.replaceChildren(
@@ -490,22 +533,28 @@ const createViewShell = (view, host, primitiveRegistry) => {
         return item;
       }),
     );
-    const operation = nextSnapshot.form.operation;
     submitButton.disabled =
+      busy ||
       nextSnapshot.form.lifecycle !== "active" ||
       operation === "validating" ||
       operation === "submitting";
     submitButton.textContent =
       operation === "validating"
         ? FORM_LABELS.validating
-        : operation === "submitting"
+        : busy || operation === "submitting"
           ? FORM_LABELS.submitting
           : FORM_LABELS.submit;
     const total = getMaterialTotal(nextSnapshot.form.values);
-    statusNode.textContent = `Status ${PRIMITIVE_TEXT.formStateLabel(operation, nextSnapshot.form.submissionStatus)} | Total ${total.toFixed(2)}/100`;
+    statusNode.textContent = stale || resultInvalidated
+      ? `Parameters changed. Complete Prediction to run again. | Total ${total.toFixed(2)}/100`
+      : `Status ${PRIMITIVE_TEXT.formStateLabel(operation, nextSnapshot.form.submissionStatus)} | Total ${total.toFixed(2)}/100`;
   };
   sync(snapshot);
-  return { sync, dispose: () => ui.dispose() };
+  return { sync, dispose: () => {
+    disposed = true;
+    pending?.controller.abort();
+    ui.dispose();
+  } };
 };
 
 export const mountFormulationDemo = (container = document.body, designSystem) => {
@@ -541,7 +590,10 @@ export const mountFormulationDemo = (container = document.body, designSystem) =>
     rendered?.dispose();
     view?.dispose();
     view = createView(initialValues);
-    rendered = createViewShell(view, formHost, primitiveRegistry);
+    rendered = createViewShell(view, formHost, primitiveRegistry, (busy) => {
+      loadButton.disabled = busy;
+      select.disabled = busy;
+    });
     unsubscribe = view.subscribe((snapshot) => {
       rendered.sync(snapshot);
     });
@@ -554,6 +606,7 @@ export const mountFormulationDemo = (container = document.body, designSystem) =>
   });
 
   loadButton.addEventListener("click", () => {
+    if (loadButton.disabled) return;
     const example = getExampleById(selectedExampleId);
     if (!example) {
       return;

@@ -36,7 +36,7 @@ class FormulationPredictionReportElement extends HTMLElement {
 
   #renderChart(points) {
     if (!Array.isArray(points) || points.length === 0) {
-      return `<div class="empty">Prediction curve will appear here.</div>`;
+      return `<div class="empty">No dissolution prediction is available.</div>`;
     }
 
     const width = 520;
@@ -67,6 +67,7 @@ class FormulationPredictionReportElement extends HTMLElement {
             .join("")}
           <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" class="axis"></line>
           <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" class="axis"></line>
+          ${[0, maxX / 2, maxX].map((time) => `<text x="${projectX(time)}" y="${height - padding + 16}" class="label center">${time.toFixed(1)}</text>`).join("")}
           <polyline class="line" points="${polyline}"></polyline>
           ${points
             .map(
@@ -76,6 +77,13 @@ class FormulationPredictionReportElement extends HTMLElement {
           <text x="${width / 2}" y="${height - 6}" class="label center">Time (minutes)</text>
           <text x="12" y="${height / 2}" class="label" transform="rotate(-90 12 ${height / 2})">Amount dissolved (%)</text>
         </svg>
+        <details>
+          <summary>Dissolution times</summary>
+          <table aria-label="Dissolution times">
+            <thead><tr><th scope="col">Amount dissolved (%)</th><th scope="col">Time (minutes)</th></tr></thead>
+            <tbody>${points.map((point) => `<tr><td>${escapeHtml(point.dissolvedPercent)}</td><td>${escapeHtml(point.timeMinutes.toFixed(2))}</td></tr>`).join("")}</tbody>
+          </table>
+        </details>
       </div>
     `;
   }
@@ -99,18 +107,22 @@ class FormulationPredictionReportElement extends HTMLElement {
         .row { display:grid; grid-template-columns:1fr 100px; min-height:3.4rem; border-bottom:1px solid color-mix(in srgb, var(--mlf-color-border, #d9dce7) 88%, transparent); }
         .row span,.row strong { display:flex; align-items:center; padding:.85rem 1rem; }
         .row strong { justify-content:center; font-weight:500; }
-        .good { background:rgba(121,226,123,.2); color:#16702a; }
-        .bad { background:rgba(239,64,73,.16); color:#b21f28; }
+        .good { background:color-mix(in srgb, var(--mlf-color-success, #16702a) 15%, transparent); color:var(--mlf-color-success, #16702a); }
+        .bad { background:var(--mlf-color-danger-soft, rgba(239,64,73,.16)); color:var(--mlf-color-danger, #b21f28); }
         .chart-wrap { display:grid; gap:.6rem; }
         .legend { display:inline-flex; align-items:center; justify-content:center; gap:.45rem; color:var(--mlf-color-text-muted, #4f4b75); }
-        .swatch { width:30px; height:14px; background:#8f8cd2; }
+        .swatch { width:30px; height:14px; background:var(--mlf-color-accent, #8f8cd2); }
         svg { width:100%; }
-        .grid-line { stroke:rgba(143,140,210,.22); stroke-width:1; }
-        .axis { stroke:rgba(61,56,93,.55); stroke-width:1.2; }
-        .label { fill:#4e4a75; font-size:12px; }
+        .grid-line { stroke:var(--mlf-color-border, #d9dce7); stroke-width:1; }
+        .axis { stroke:var(--mlf-color-text-muted, #4e4a75); stroke-width:1.2; }
+        .label { fill:var(--mlf-color-text-muted, #4e4a75); font-size:12px; }
         .center { text-anchor:middle; }
-        .line { stroke:#8f8cd2; stroke-width:3; fill:none; }
-        .point { fill:#8f8cd2; }
+        .line { stroke:var(--mlf-color-accent, #8f8cd2); stroke-width:3; fill:none; }
+        .point { fill:var(--mlf-color-accent, #8f8cd2); }
+        details { color:var(--mlf-color-text-muted, #4e4a75); }
+        summary { cursor:pointer; }
+        table { width:100%; margin-top:.5rem; border-collapse:collapse; text-align:left; }
+        th,td { padding:.4rem; border-bottom:1px solid var(--mlf-color-border, #d9dce7); }
         .error,.empty { padding:.9rem 1rem; border-radius:1rem; }
         .error { color:var(--mlf-color-danger, #dc2626); border:1px solid color-mix(in srgb, var(--mlf-color-danger, #dc2626) 25%, transparent); }
         .empty { border:1px dashed var(--mlf-color-border, #d9dce7); color:var(--mlf-color-text-muted, #5f5a87); }
@@ -123,23 +135,24 @@ class FormulationPredictionReportElement extends HTMLElement {
             ? `<div class="empty">Prediction pending.</div>`
             : `
               <section part="formulation-prediction-report" id="${escapeHtml(this._context?.regionId ?? "")}">
+                ${Array.isArray(payload.errors) && payload.errors.length ? `<div class="error" role="status">${payload.errors.map((message) => `<p>${escapeHtml(message)}</p>`).join("")}</div>` : ""}
                 <div class="grid">
                   <div class="table">
                     <div class="row">
                       <span>Mechanical characteristics</span>
-                      <strong class="${summary ? "good" : ""}">${escapeHtml(summary?.mechanicalCharacteristics ?? "…")}</strong>
+                      <strong class="${summary?.mechanicalCharacteristics === "Good" ? "good" : ""}">${escapeHtml(summary?.mechanicalCharacteristics ?? "Unavailable")}</strong>
                     </div>
                     <div class="row">
                       <span>Extrusion temperature</span>
-                      <strong>${summary ? `${escapeHtml(summary.extrusionTemperature)} °C` : "…"}</strong>
+                      <strong>${typeof summary?.extrusionTemperature === "number" ? `${escapeHtml(summary.extrusionTemperature)} °C` : "Unavailable"}</strong>
                     </div>
                     <div class="row">
                       <span>Printability</span>
-                      <strong class="${summary?.printability === "No" ? "bad" : summary ? "good" : ""}">${escapeHtml(summary?.printability ?? "…")}</strong>
+                      <strong class="${summary?.printability === "No" ? "bad" : summary?.printability === "Yes" ? "good" : ""}">${escapeHtml(summary?.printability ?? "Unavailable")}</strong>
                     </div>
                     <div class="row">
                       <span>Printing temperature</span>
-                      <strong>${summary ? `${escapeHtml(summary.printingTemperature)} °C` : "…"}</strong>
+                      <strong>${typeof summary?.printingTemperature === "number" ? `${escapeHtml(summary.printingTemperature)} °C` : "Unavailable"}</strong>
                     </div>
                   </div>
                   ${this.#renderChart(curve)}

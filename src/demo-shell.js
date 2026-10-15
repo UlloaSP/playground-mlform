@@ -8,6 +8,8 @@ import {
 } from "./playground/index.js";
 import { PLAYGROUND_DESIGN_SYSTEM } from "./playground/config.js";
 import { mountSeriesPlayground } from "./playground/series.js";
+import { mountLab2Pressure } from "./clinical-demos/lab2pressure.js";
+import { mountDoseTailor } from "./clinical-demos/dosetailor.js";
 
 const DESIGN_STORAGE_KEY = "mlform-playground-design";
 const VIEWPORT_STORAGE_KEY = "mlform-playground-viewport";
@@ -68,6 +70,8 @@ const DEMOS = [
     label: "M3DISEEN",
     mount: (container, designSystem) => mountFormulationDemo(container, designSystem),
   },
+  { id: "lab2pressure-lite", label: "Lab2pressure/lite", mount: mountLab2Pressure },
+  { id: "dosetailor", label: "DoseTailor", mount: mountDoseTailor },
   {
     id: "playground-stacked",
     label: "Stacked",
